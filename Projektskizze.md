@@ -133,4 +133,6 @@ Nach der erfolgreichen Implementierung der Kernfunktionen (MVP) im Rahmen des Ku
 - **Erweitertes Vertrauenssystem:** Einführung von Profil-Badges (z.B. "Verifizierte Telefonnummer" oder Meilensteine wie "10 erfolgreiche Hilfen"), um die Sicherheit und das Vertrauen innerhalb der Community weiter zu stärken.
 
 # Anhang
--
+Siehe Github Repo.
+Die Skizzen stehen noch nicht zu 100% fest. Die müssten im Verlaufe eventuell noch geändert werden.
+
