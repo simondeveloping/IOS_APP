@@ -162,6 +162,15 @@ Layout:
 Auftrag:
 ![Auftrag](Auftrag_Entwurf.jpg)
 
+Erstellen:
+![Erstellen](Erstellen_Entwurf.png)
+
+Favoriten:
+![Favoriten](Favoriten_Entwurf.png)
+
+Profil:
+![Profil](Profil_Entwurf.png)
+
 ER Diagramm
 [ER Diagramm](ER_Diagramm_Entwurf.pdf)
 ![ER](ER.png)
