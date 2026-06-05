@@ -89,7 +89,7 @@ Beide Projektmitglieder arbeiten primär an der iOS-App in Swift, wobei die Aufg
 - **Setup:** Einrichtung des Xcode-Projekts, Git-Repository und des Supabase-Projekts (Tabellen, RLS-Policies). Simon
 - **Datenmodellierung:** Definition der Swift-Structs passend zum PostgreSQL-Schema in Supabase. Simon
 - **Authentifizierung:**
-  Implementierung der UI. Mike
+  Implementierung der UI. Simon
   Logik für Login/Registrierung über Supabase. Simon
 - **Auftragsverwaltung:** Erstellen der Views zum Anlegen und Verwalten von Hilfsaufträgen. Mike
 - **Feed:** Entwicklung der Listenansicht (Map- oder List-View) für verfügbare Aufträge. Mike
@@ -114,6 +114,7 @@ Die Arbeitspakete sind anhand der wöchentlichen Termine des Kurses wie folgt au
   - Definition der Datenmodelle in Swift.
   - Implementierung der Funktionen zum Erstellen, Bearbeiten und Löschen von Aufträgen.
   - Bauen der Feed-Ansicht, damit Nutzer verfügbare Jobs in der Liste sehen können.
+  - Login Logik.
 
 - **12.06.26 - Matchmaking & Profile**
 

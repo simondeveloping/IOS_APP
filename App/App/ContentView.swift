@@ -8,40 +8,48 @@ import SwiftUI
 
 struct ContentView: View {
 
+    @AppStorage("isLoggedIn") var isLoggedIn: Bool = false
+
     var body: some View {
-
-        TabView {
-
-            HomeView()
-                .tabItem {
-                    Image(systemName: "house.fill")
-                    Text("Home")
-                }
-
-
-            EntdeckenView()
-                .tabItem {
-                    Image(systemName: "magnifyingglass")
-                    Text("Entdecken")
-                }
-
-            ErstellenView()
-                .tabItem {
-                    Image(systemName: "plus.circle.fill")
-                    Text("Erstellen")
-                }
+        
+        if !isLoggedIn {
+            LoginView()
+        } else {
             
-            FavoritenView()
-                .tabItem {
-                    Image(systemName: "heart.fill")
-                    Text("Favoriten")
-                }
             
-            ProfileView()
-                .tabItem {
-                    Image(systemName: "person.fill")
-                    Text("Profil")
-                }
+            TabView {
+                
+                HomeView()
+                    .tabItem {
+                        Image(systemName: "house.fill")
+                        Text("Home")
+                    }
+                
+                
+                EntdeckenView()
+                    .tabItem {
+                        Image(systemName: "magnifyingglass")
+                        Text("Entdecken")
+                    }
+                
+                ErstellenView()
+                    .tabItem {
+                        Image(systemName: "plus.circle.fill")
+                        Text("Erstellen")
+                    }
+                
+                FavoritenView()
+                    .tabItem {
+                        Image(systemName: "heart.fill")
+                        Text("Favoriten")
+                    }
+                
+                ProfileView()
+                    .tabItem {
+                        Image(systemName: "person.fill")
+                        Text("Profil")
+                    }
+            }
         }
     }
 };

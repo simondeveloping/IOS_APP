@@ -7,7 +7,7 @@
 import SwiftUI
 
 struct ProfileView: View {
-
+    @AppStorage("isLoggedIn") var isLoggedIn: Bool = false
     var body: some View {
 
         NavigationView {
@@ -16,8 +16,15 @@ struct ProfileView: View {
 
                 Text("Profile View")
                     .font(.largeTitle)
+                Button(action : {
+                    isLoggedIn = false
+                },
+                       label: {
+                    Text("Ausloggen")
+                })
             }
             .navigationTitle("Profil")
+            
         }
     }
 }
