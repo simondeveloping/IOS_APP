@@ -9,14 +9,13 @@ import SwiftUI
 struct ContentView: View {
 
     @AppStorage("isLoggedIn") var isLoggedIn: Bool = false
-
+    @AppStorage("onboardingComplete") var onboardingComplete: Bool = false
     var body: some View {
-        
-        if !isLoggedIn {
+        if !onboardingComplete {
+            OnboardingView(onboardingComplete: $onboardingComplete)
+        }else if !isLoggedIn {
             LoginView()
         } else {
-            
-            
             TabView {
                 
                 HomeView()

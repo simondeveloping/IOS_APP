@@ -28,7 +28,7 @@ class LoginViewModel : ObservableObject{
                 UserDefaults.standard.set(true, forKey: "isLoggedIn")
                 
             } else {
-                self.errorMessage = "Zugangsdaten nicht korrekt."
+                self.errorMessage = "Email oder Passwort nicht korrekt."
             }
         }
     }
