@@ -4,17 +4,49 @@
 //
 //  Created by Boromir on 05.06.26.
 //
+
+
+
 import SwiftUI
 import Foundation
-internal import Combine
+import Combine
+import Supabase
 
-class RegisterViewModel: ObservableObject{
+
+
+@MainActor
+class RegisterViewModel: ObservableObject {
     @Published var Vorname = ""
     @Published var Nachname = ""
     @Published var Email = ""
     @Published var Passwort = ""
     
-    func register(){
-        
+    @Published var isRegistrationSuccessful = false
+    @Published var errorMessage: String? = nil
+    
+    func register() async {
+        do {
+            let authResponse = try await supabase.auth.signUp(
+                email: Email,
+                password: Passwort
+            )
+            
+            let neuesProfil = User(
+                email: Email,
+                Vorname: Vorname,
+                Nachname: Nachname
+            )
+            
+            try await supabase
+                .from("User")
+                .insert(neuesProfil)
+                .execute()
+            
+            self.isRegistrationSuccessful = true
+            
+        } catch {
+            self.errorMessage = error.localizedDescription
+            print("Fehler bei der Registrierung: \(error)")
+        }
     }
 }

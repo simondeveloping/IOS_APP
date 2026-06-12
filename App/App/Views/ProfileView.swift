@@ -13,7 +13,7 @@ struct ProfileView: View {
         NavigationView {
 
             VStack {
-
+                
                 Text("Profile View")
                     .font(.largeTitle)
                 Button(action : {
