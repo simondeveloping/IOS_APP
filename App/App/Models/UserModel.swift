@@ -6,9 +6,8 @@
 //
 import Foundation
 
-struct User: Identifiable {
-    let id = UUID()
+struct User: Encodable {
     let email: String
-    let vorname: String
-    let nachname: String
+    let Vorname: String
+    let Nachname: String
 }

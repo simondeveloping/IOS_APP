@@ -5,31 +5,38 @@
 //  Created by Boromir on 05.06.26.
 //
 
+
 import Foundation
 import SwiftUI
-internal import Combine
-
-class LoginViewModel : ObservableObject{
+import Combine
+import Supabase
+@MainActor
+class LoginViewModel: ObservableObject {
     @Published var email = ""
     @Published var password = ""
     @Published var isLoading = false
     @Published var errorMessage: String?
     
-    func login(){
+    func login() async {
         self.isLoading = true
+        self.errorMessage = nil
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
-            guard let self = self else { return }
-            self.isLoading = false
+        do {
+            let session = try await supabase.auth.signIn(
+                email: email,
+                password: password
+            )
             
-            if self.password == "password" {
-                print("Login erfolgreich!")
-                
-                UserDefaults.standard.set(true, forKey: "isLoggedIn")
-                
-            } else {
-                self.errorMessage = "Email oder Passwort nicht korrekt."
-            }
+            self.isLoading = false
+            print("Login erfolgreich für User ID: \(session.user.id)")
+            
+           
+            UserDefaults.standard.set(true, forKey: "isLoggedIn")
+            
+        } catch {
+            self.isLoading = false
+            self.errorMessage = "E-Mail oder Passwort nicht korrekt."
+            print("Fehler beim Login: \(error)")
         }
     }
 }

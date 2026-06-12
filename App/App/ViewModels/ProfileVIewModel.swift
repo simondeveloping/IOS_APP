@@ -6,9 +6,10 @@
 //
 import Foundation
 import SwiftUI
-internal import Combine
+import Combine
 
 class ProfileViewModel: ObservableObject
 {
     @Published var username = "User"
+    
 }
