@@ -1,0 +1,7 @@
+# macOS Verzeichnis-Einstellungen
+.DS_Store
+**/.DS_Store
+
+# Xcode benutzerspezifische Daten
+xcuserdata/
+*.xcuserstate
