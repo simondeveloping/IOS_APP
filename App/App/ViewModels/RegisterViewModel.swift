@@ -31,7 +31,8 @@ class RegisterViewModel: ObservableObject {
                 password: Passwort
             )
             
-            let neuesProfil = User(
+            let neuesProfil = UserProfile(
+                id: nil,
                 email: Email,
                 Vorname: Vorname,
                 Nachname: Nachname
