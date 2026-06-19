@@ -5,11 +5,14 @@
 //  Created by Boromir on 05.06.26.
 //
 
-
 import Foundation
 import SwiftUI
 import Combine
 import Supabase
+
+
+
+
 @MainActor
 class LoginViewModel: ObservableObject {
     @Published var email = ""
@@ -26,11 +29,24 @@ class LoginViewModel: ObservableObject {
                 email: email,
                 password: password
             )
-            
-            self.isLoading = false
             print("Login erfolgreich für User ID: \(session.user.id)")
             
            
+            let profile: UserProfile = try await supabase.database
+                .from("User")
+                .select()
+                .eq("email", value: email.lowercased())
+                .single()
+                .execute()
+                .value
+            
+            if let userId = profile.id {
+                UserDefaults.standard.set(userId, forKey: "userId")
+            }
+            UserDefaults.standard.set(profile.Vorname, forKey: "userVorname")
+            UserDefaults.standard.set(profile.Nachname, forKey: "userNachname")
+            
+            self.isLoading = false
             UserDefaults.standard.set(true, forKey: "isLoggedIn")
             
         } catch {
