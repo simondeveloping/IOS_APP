@@ -29,7 +29,9 @@ class ErstellenViewModel: ObservableObject {
 
     // UI-State
     @Published var isLoading = false
-
+    
+    // Fehler Property
+    @Published var errorMessage: String?
     // Kategorien laden
     func loadCategories() async {
         do {
@@ -50,14 +52,35 @@ class ErstellenViewModel: ObservableObject {
             print("Fehler:", error)
         }
     }
+    
+    struct AppUser: Decodable {
+        let id: Int64
+    }
 
     // Auftrag erstellen
     func createJob() async {
 
-        guard !title.isEmpty else { return }
-
+        guard !title.isEmpty else {
+            errorMessage = "Bitte gib einen Titel an."
+            return
+        }
+        
         isLoading = true
+        
+        do {
+        
+        let session = try await supabase.auth.session
+        let email = session.user.email ?? ""
 
+            // Passende Zeile in der eigenen User-Tabelle finden
+            let appUser: AppUser = try await supabase
+                .from("User")
+                .select("id")
+                .eq("email", value: email)
+                .single()
+                .execute()
+                .value
+        
         let request = CreateJobRequest(
             title: title,
             description: description,
@@ -66,10 +89,10 @@ class ErstellenViewModel: ObservableObject {
             location: location,
             date: date,
             isFlexibleTime: flexibleTime,
-            notes: notes
+            notes: notes,
+            user_id: appUser.id
         )
 
-        do {
             try await supabase
                 .from("Order")
                 .insert(request)

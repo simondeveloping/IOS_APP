@@ -15,4 +15,5 @@ struct CreateJobRequest: Codable {
     var date: Date
     var isFlexibleTime: Bool
     var notes: String
+    var user_id: Int64
 }
