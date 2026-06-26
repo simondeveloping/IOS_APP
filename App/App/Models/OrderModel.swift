@@ -78,11 +78,3 @@ struct Order: Decodable, Identifiable {
         return ISO8601DateFormatter().date(from: value)
     }
 }
-struct AcceptedOrder: Codable, Identifiable {
-    let id: Int
-    let order_id: Int
-    let creater_id: Int
-    let accepter_id: Int
-    let created_at: String?
-}
-
