@@ -23,9 +23,9 @@ struct MeineAuftraegeView: View {
         case .alle:
             return viewModel.orders
         case .erstellt:
-            return viewModel.orders.filter { $0.createrId == userId }
+            return viewModel.orders.filter { $0.createrId == userId && $0.accepterId == 0 }
         case .angenommen:
-            return viewModel.orders.filter { $0.accepterId == userId }
+            return viewModel.orders.filter { $0.createrId == userId && $0.accepterId != 0 }
         }
     }
 
@@ -90,13 +90,13 @@ struct MeineAuftraegeView: View {
                                 .foregroundColor(.secondary)
 
                             HStack {
-                                if order.createrId == userId {
+                                if order.createrId == userId, order.accepterId == 0 {
                                     Label("Erstellt", systemImage: "person.badge.plus")
                                         .font(.caption)
                                         .foregroundColor(.blue)
                                 }
-                                if order.accepterId == userId {
-                                    Label("Angenommen", systemImage: "hand.thumbsup")
+                                if order.createrId == userId, order.accepterId != 0 {
+                                    Label("Angenommen von \(viewModel.name(for: order.accepterId))", systemImage: "hand.thumbsup")
                                         .font(.caption)
                                         .foregroundColor(.orange)
                                 }

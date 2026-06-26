@@ -72,7 +72,9 @@ struct ProfileView: View {
                                 ProfileRow(icon: "calendar", title: "Meine Aufträge", subtitle: "Angebotene und angenommene Aufträge")
                             }
                             Divider().padding(.leading, 45)
-                            ProfileRow(icon: "message", title: "Meine Anfragen", subtitle: "Anfragen, die ich gestellt habe")
+                            NavigationLink(destination: AngenommeneAuftraegeView()) {
+                                ProfileRow(icon: "hand.thumbsup", title: "Angenommene Aufträge", subtitle: "Aufträge, die ich angenommen habe")
+                            }
                             Divider().padding(.leading, 45)
                             NavigationLink(destination: BewertungenView(userId: userId)) {
                                 ProfileRow(icon: "bell", title: "Bewertungen", subtitle: "Erhaltene und abgegebene Bewertungen", trailingIcon: "")
