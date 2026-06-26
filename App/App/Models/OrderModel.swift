@@ -7,6 +7,15 @@
 
 import Foundation
 
+struct AcceptedOrder: Codable, Identifiable {
+    let id: Int
+    let order_id: Int
+    let creater_id: Int
+    let accepter_id: Int
+    let created_at: String?
+}
+
+
 struct Order: Decodable, Identifiable {
     let id: Int64
     let title: String
