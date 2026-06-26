@@ -84,6 +84,22 @@ struct OrderDetailView: View {
                     } message: {
                         Text(viewModel.successMessage ?? "")
                     }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        Task {
+                            await viewModel.toggleFavorite(for: order)
+                        }
+                    } label: {
+                        Image(systemName: viewModel.isFavorite ? "heart.fill" : "heart")
+                        .foregroundColor(viewModel.isFavorite ? .red : .gray)
+                    }
+                }
+            }
+            .task {
+            await viewModel.loadCurrentUserAndFavoriteStatus(for: order)
+            }
         }
         .background(Color(.systemGroupedBackground))
         .navigationTitle("Auftragsdetails")

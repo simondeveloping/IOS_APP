@@ -15,6 +15,11 @@ class OrderDetailViewModel: ObservableObject {
     @Published var successMessage: String?
     @Published var sellerName: String = ""
     
+    
+    @Published var isFavorite = false
+    
+    private var currentFavoriteId: Int?
+    
     @AppStorage("userId") var userId: Int = 0
 
     func loadSellerName(for userId: Int) async {
@@ -33,14 +38,71 @@ class OrderDetailViewModel: ObservableObject {
         }
     }
 
+    // beim Öffnen der View aufrufen
+        func loadCurrentUserAndFavoriteStatus(for order: Order) async {
+            do {
+                // prüfen, ob bereits favorisiert
+                let existing: [Favorite] = try await supabase
+                    .from("Favorites")
+                    .select()
+                    .eq("user_id", value: userId)
+                    .eq("order_id", value: Int(order.id))
+                    .execute()
+                    .value
+
+                if let existingFavorite = existing.first {
+                    isFavorite = true
+                    currentFavoriteId = Int(existingFavorite.id)
+                } else {
+                    isFavorite = false
+                    currentFavoriteId = nil
+                }
+
+            }catch {
+                print("Fehler beim Senden der Anfrage:", error)
+                errorMessage = "Anfrage konnte nicht gesendet werden."
+            }
+        }
+
+        func toggleFavorite(for order: Order) async {
+
+            do {
+                if isFavorite, let favoriteId = currentFavoriteId {
+                    // Favorit entfernen
+                    try await supabase
+                        .from("Favorites")
+                        .delete()
+                        .eq("id", value: favoriteId)
+                        .execute()
+
+                    isFavorite = false
+                    currentFavoriteId = nil
+                } else {
+                    // Favorit hinzufügen
+                    let payload = FavoritePayload(userId: Int(Int64(userId)), orderId: Int(order.id))
+
+                    let inserted: Favorite = try await supabase
+                        .from("Favorites")
+                        .insert(payload)
+                        .select()
+                        .single()
+                        .execute()
+                        .value
+
+                    isFavorite = true
+                    currentFavoriteId = Int(inserted.id)
+                }
+            } catch {
+                print("Fehler beim Favorisieren:", error)
+                errorMessage = "Aktion konnte nicht ausgeführt werden."
+            }
+        }
+    
     func sendRequest(for order: Order) async {
         errorMessage = nil
         isLoading = true
 
         do {
-            let session = try await supabase.auth.session
-            let email = session.user.email ?? ""
-
             let payload = AcceptedOrderPayload(
                 orderId: order.id,
                 createrId: order.userId,
