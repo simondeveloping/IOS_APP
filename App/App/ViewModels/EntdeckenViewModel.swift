@@ -11,6 +11,7 @@ import Combine
 @MainActor
 class EntdeckenViewModel: ObservableObject {
     @Published var allOrders: [Order] = []
+    @Published var categories: [Category] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var searchText = ""
@@ -34,6 +35,7 @@ class EntdeckenViewModel: ObservableObject {
 
         await loadCurrentUserId()
         await fetchOrders()
+        await loadCategories()
 
         isLoading = false
     }
@@ -57,6 +59,24 @@ class EntdeckenViewModel: ObservableObject {
         } catch {
             print("Fehler beim Laden des Users:", error)
             currentUserId = nil
+        }
+    }
+
+    func categoryName(for order: Order) -> String {
+        guard let categoryId = order.categoryId else { return "Keine Kategorie" }
+        return categories.first { $0.id == Int(categoryId) }?.title ?? "Keine Kategorie"
+    }
+
+    private func loadCategories() async {
+        do {
+            categories = try await supabase
+                .from("Category")
+                .select("id, title")
+                .order("title")
+                .execute()
+                .value
+        } catch {
+            print("Fehler beim Laden der Kategorien:", error)
         }
     }
 
