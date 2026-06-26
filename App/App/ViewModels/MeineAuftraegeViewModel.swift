@@ -27,6 +27,7 @@ class MeineAuftraegeViewModel: ObservableObject {
     @Published var orders: [CombinedOrder] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
+    @Published var accepterNames: [Int: String] = [:]
 
     func loadOrders(for userId: Int) async {
         isLoading = true
@@ -102,10 +103,30 @@ class MeineAuftraegeViewModel: ObservableObject {
             }
 
             orders = combined.sorted { $0.date > $1.date }
+
+            let accepterIds = Set(combined.map { $0.accepterId }).filter { $0 != 0 }
+            for id in accepterIds {
+                do {
+                    let userResponse = try await supabase
+                        .from("User")
+                        .select()
+                        .eq("id", value: id)
+                        .single()
+                        .execute()
+                    let user: UserProfile = try JSONDecoder().decode(UserProfile.self, from: userResponse.data)
+                    accepterNames[id] = "\(user.Vorname) \(user.Nachname)"
+                } catch {
+                    print("Konnte Benutzer \(id) nicht laden:", error)
+                }
+            }
         } catch {
             print("Fehler beim Laden der Aufträge:", error)
             errorMessage = "Aufträge konnten nicht geladen werden"
         }
         isLoading = false
+    }
+
+    func name(for userId: Int) -> String {
+        accepterNames[userId] ?? "Unbekannt"
     }
 }
