@@ -12,6 +12,13 @@ private struct HomeAppUser: Decodable {
     let id: Int64
 }
 
+private struct AcceptedOrderRequest: Encodable {
+    let created_at: String
+    let order_id: Int64
+    let creator_id: Int64
+    let accepter_id: Int64
+}
+
 @MainActor
 class HomeViewModel: ObservableObject {
     // Daten für die HomeView
