@@ -56,9 +56,9 @@ struct ProfileView: View {
                     .padding(.horizontal, 5)
                     
                     VStack(spacing: 0) {
-                        ProfileRow(icon: "person", title: "Mein Profil", subtitle: "Öffentliches Profil anzeigen und bearbeiten")
-                        Divider().padding(.leading, 45)
-                        ProfileRow(icon: "shield", title: "Verifizierung", subtitle: "Identität verifiziert", trailingIcon: "checkmark.circle", trailingColor: .green)
+                        NavigationLink(destination: MyProfileView()) {
+                            ProfileRow(icon: "person", title: "Mein Profil", subtitle: "Öffentliches Profil anzeigen und bearbeiten", trailingIcon: "")
+                        }
                     }
                     .modifier(CardModifier())
                     
@@ -89,11 +89,7 @@ struct ProfileView: View {
                             Divider().padding(.leading, 45)
                             ProfileRow(icon: "creditcard", title: "Zahlungsmethoden", subtitle: "Verwalte deine Zahlungsarten")
                             Divider().padding(.leading, 45)
-                            ProfileRow(icon: "lock", title: "Privatsphäre", subtitle: "Sichtbarkeit und Datenschutz")
-                            Divider().padding(.leading, 45)
-                            ProfileRow(icon: "globe", title: "Sprache", subtitle: "Deutsch")
-                            Divider().padding(.leading, 45)
-                            ProfileRow(icon: "questionmark.circle", title: "Hilfe & Support", subtitle: "Häufige Fragen und Kontakt")
+                            
                         }
                         .modifier(CardModifier())
                     }

@@ -6,7 +6,7 @@
 //
 import Foundation
 
-struct UserProfile: Encodable, Decodable {
+struct UserProfile: Encodable, Decodable ,Equatable{
     let id: Int?
     let email: String
     let Vorname: String
