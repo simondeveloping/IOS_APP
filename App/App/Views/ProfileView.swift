@@ -68,7 +68,9 @@ struct ProfileView: View {
                             .padding(.horizontal, 5)
                         
                         VStack(spacing: 0) {
-                            ProfileRow(icon: "calendar", title: "Meine Aufträge", subtitle: "Angebotene und angenommene Aufträge")
+                            NavigationLink(destination: MeineAuftraegeView()) {
+                                ProfileRow(icon: "calendar", title: "Meine Aufträge", subtitle: "Angebotene und angenommene Aufträge")
+                            }
                             Divider().padding(.leading, 45)
                             ProfileRow(icon: "message", title: "Meine Anfragen", subtitle: "Anfragen, die ich gestellt habe")
                             Divider().padding(.leading, 45)
