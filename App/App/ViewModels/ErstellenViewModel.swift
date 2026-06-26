@@ -8,7 +8,6 @@ import Foundation
 import SwiftUI
 import Combine
 import Supabase
-import Combine
 
 @MainActor
 class ErstellenViewModel: ObservableObject {
