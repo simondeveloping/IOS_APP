@@ -34,7 +34,7 @@ struct EntdeckenView: View {
                         LazyVStack(spacing: 12) {
                             ForEach(viewModel.filteredOrders) { order in
                                 NavigationLink {
-                                    OrderDetailView(order: order)
+                                    OrderDetailView(order: order, categoryName: viewModel.categoryName(for: order))
                                 } label: {
                                     orderCard(order)
                                 }
@@ -106,73 +106,6 @@ struct EntdeckenView: View {
                     .foregroundStyle(.primary)
             }
         }
-        .padding()
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-    }
-}
-
-private struct OrderDetailView: View {
-    let order: Order
-
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                Text(order.title)
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-
-                detailRow("Ort", order.location, icon: "mappin.and.ellipse")
-                detailRow("Datum", order.date.formatted(date: .long, time: .omitted), icon: "calendar")
-                detailRow("Flexible Uhrzeit", order.isFlexibleTime ? "Ja" : "Nein", icon: "clock")
-
-                if let price = order.price {
-                    detailRow("Preisvorstellung", price.formatted(.currency(code: Locale.current.currency?.identifier ?? "EUR")), icon: "eurosign.circle")
-                }
-
-                detailText("Beschreibung", order.description)
-                detailText("Zusätzliche Hinweise", order.notes.isEmpty ? "Keine Hinweise" : order.notes)
-            }
-            .padding()
-        }
-        .background(Color(.systemGroupedBackground))
-        .navigationTitle("Auftragsdetails")
-        .navigationBarTitleDisplayMode(.inline)
-    }
-
-    private func detailRow(_ title: String, _ value: String, icon: String) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .frame(width: 24)
-                .foregroundStyle(.blue)
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                Text(value)
-                    .font(.subheadline)
-                    .foregroundStyle(.primary)
-            }
-
-            Spacer()
-        }
-        .padding()
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-    }
-
-    private func detailText(_ title: String, _ text: String) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .font(.headline)
-
-            Text(text)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 8))
