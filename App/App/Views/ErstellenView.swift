@@ -26,5 +26,12 @@ struct ErstellenView: View {
                 CreateJobFormView(viewModel: createViewModel) // Erstellen eines Auftrages View
             }
         }
+        .onChange(of: selectedTab) { newTab in
+            if newTab == 0 {
+                Task {
+                    await ordersViewModel.fetchMyOrders()
+                }
+            }
+        }
     }
 }

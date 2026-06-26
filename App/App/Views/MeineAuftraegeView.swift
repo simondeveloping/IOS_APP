@@ -113,6 +113,10 @@ struct MeineAuftraegeView: View {
             guard userId > 0 else { return }
             await viewModel.loadOrders(for: userId)
         }
+        .refreshable {
+            guard userId > 0 else { return }
+            await viewModel.loadOrders(for: userId)
+        }
     }
 
 }
