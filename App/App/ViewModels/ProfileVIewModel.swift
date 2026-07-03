@@ -55,6 +55,7 @@ class ProfileViewModel: ObservableObject {
 
             let userProfile: UserProfile = try JSONDecoder().decode(UserProfile.self, from: response.data)
             profile = userProfile
+            UserDefaults.standard.set(userProfile.avatar, forKey: "userAvatar")
         } catch {
             print("Fehler beim Laden des Profils:", error)
             errorMessage = "Profil konnte nicht geladen werden"
@@ -75,8 +76,9 @@ class ProfileViewModel: ObservableObject {
 
             UserDefaults.standard.set(vorname, forKey: "userVorname")
             UserDefaults.standard.set(nachname, forKey: "userNachname")
+            UserDefaults.standard.set(profile?.avatar, forKey: "userAvatar")
 
-            profile = UserProfile(id: userId, email: email, Vorname: vorname, Nachname: nachname)
+            profile = UserProfile(id: userId, email: email, Vorname: vorname, Nachname: nachname, avatar: profile?.avatar)
             saveSuccess = true
         } catch {
             print("Fehler beim Speichern des Profils:", error)

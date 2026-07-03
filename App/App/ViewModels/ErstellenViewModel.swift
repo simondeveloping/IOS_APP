@@ -39,7 +39,7 @@ class ErstellenViewModel: ObservableObject {
         do {
             let response = try await supabase
                 .from("Category")
-                .select("id, title")
+                .select("id, title, image_path")
                 .order("title")
                 .execute()
 

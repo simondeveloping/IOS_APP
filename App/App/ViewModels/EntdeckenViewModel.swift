@@ -15,6 +15,8 @@ class EntdeckenViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var searchText = ""
+    @Published var sellerNames: [Int64: String] = [:]
+    @Published var sellerRatings: [Int64: Double] = [:]
 
     private var currentUserId: Int64?
 
@@ -36,6 +38,8 @@ class EntdeckenViewModel: ObservableObject {
         await loadCurrentUserId()
         await fetchOrders()
         await loadCategories()
+        await loadSellerNames()
+        await loadSellerRatings()
 
         isLoading = false
     }
@@ -71,12 +75,51 @@ class EntdeckenViewModel: ObservableObject {
         do {
             categories = try await supabase
                 .from("Category")
-                .select("id, title")
+                .select("id, title, image_path")
                 .order("title")
                 .execute()
                 .value
         } catch {
             print("Fehler beim Laden der Kategorien:", error)
+        }
+    }
+
+    private func loadSellerNames() async {
+        let userIds = Set(allOrders.map { $0.userId })
+        for id in userIds {
+            do {
+                let user: UserProfile = try await supabase
+                    .from("User")
+                    .select()
+                    .eq("id", value: Int(id))
+                    .single()
+                    .execute()
+                    .value
+                sellerNames[id] = "\(user.Vorname) \(user.Nachname)"
+            } catch {
+                print("Fehler beim Laden des Verkäufernamens für \(id):", error)
+                sellerNames[id] = "Unbekannt"
+            }
+        }
+    }
+
+    private func loadSellerRatings() async {
+        let userIds = Set(allOrders.map { $0.userId })
+        for id in userIds {
+            do {
+                let ratings: [Rating] = try await supabase
+                    .from("Rating")
+                    .select()
+                    .eq("user_id", value: Int(id))
+                    .execute()
+                    .value
+                if !ratings.isEmpty {
+                    let total = ratings.reduce(0) { $0 + $1.stars }
+                    sellerRatings[id] = Double(total) / Double(ratings.count)
+                }
+            } catch {
+                print("Fehler beim Laden der Bewertungen für \(id):", error)
+            }
         }
     }
 
