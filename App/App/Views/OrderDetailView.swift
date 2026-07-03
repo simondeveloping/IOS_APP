@@ -10,7 +10,6 @@ struct OrderDetailView: View {
     let order: Order
     let categoryName: String
     @StateObject private var viewModel = OrderDetailViewModel()
-    @State private var showChat = false
 
     var body: some View {
         ScrollView {
@@ -31,19 +30,14 @@ struct OrderDetailView: View {
                 detailText("Beschreibung", order.description)
                 detailText("Zusätzliche Hinweise", order.notes.isEmpty ? "Keine Hinweise" : order.notes)
 
-                NavigationLink(
-                    destination: ChatView(
-                        orderId: Int(order.id),
-                        orderTitle: order.title,
-                        otherUserId: Int(order.userId),
-                        otherUserName: viewModel.sellerName
-                    ),
-                    isActive: $showChat
-                ) { EmptyView() }
-
                 HStack {
-                    Button {
-                        showChat = true
+                    NavigationLink {
+                        ChatView(
+                            orderId: Int(order.id),
+                            orderTitle: order.title,
+                            otherUserId: Int(order.userId),
+                            otherUserName: viewModel.sellerName
+                        )
                     } label: {
                         HStack(spacing: 8) {
                             Text("Anfrage stellen")
