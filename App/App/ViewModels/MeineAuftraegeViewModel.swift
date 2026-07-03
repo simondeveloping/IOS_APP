@@ -20,6 +20,7 @@ struct CombinedOrder: Identifiable {
     let location: String
     let date: Date
     let createdAt: String?
+    var unreadCount: Int = 0
 }
 
 @MainActor
@@ -104,8 +105,8 @@ class MeineAuftraegeViewModel: ObservableObject {
 
             orders = combined.sorted { $0.date > $1.date }
 
-            let accepterIds = Set(combined.map { $0.accepterId }).filter { $0 != 0 }
-            for id in accepterIds {
+            let userIds = Set(combined.flatMap { [$0.createrId, $0.accepterId] }).filter { $0 != 0 }
+            for id in userIds {
                 do {
                     let userResponse = try await supabase
                         .from("User")
@@ -119,6 +120,8 @@ class MeineAuftraegeViewModel: ObservableObject {
                     print("Konnte Benutzer \(id) nicht laden:", error)
                 }
             }
+
+            await loadUnreadCounts(for: userId)
         } catch {
             print("Fehler beim Laden der Aufträge:", error)
             errorMessage = "Aufträge konnten nicht geladen werden"
@@ -128,5 +131,30 @@ class MeineAuftraegeViewModel: ObservableObject {
 
     func name(for userId: Int) -> String {
         accepterNames[userId] ?? "Unbekannt"
+    }
+
+    func loadUnreadCounts(for userId: Int) async {
+        do {
+            let response = try await supabase
+                .from("Message")
+                .select()
+                .eq("receiver_id", value: userId)
+                .execute()
+
+            let allMessages: [Message] = try JSONDecoder().decode([Message].self, from: response.data)
+            var counts: [Int: Int] = [:]
+            for msg in allMessages {
+                counts[msg.order_id, default: 0] += 1
+            }
+
+            for i in orders.indices {
+                let orderId = orders[i].orderId
+                if let count = counts[orderId] {
+                    orders[i].unreadCount = count
+                }
+            }
+        } catch {
+            print("Fehler beim Laden der Nachrichtenanzahl:", error)
+        }
     }
 }

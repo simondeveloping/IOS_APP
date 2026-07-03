@@ -13,8 +13,25 @@ class OrderDetailViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var successMessage: String?
+    @Published var sellerName: String = ""
     
     @AppStorage("userId") var userId: Int = 0
+
+    func loadSellerName(for userId: Int) async {
+        do {
+            let response = try await supabase
+                .from("User")
+                .select()
+                .eq("id", value: userId)
+                .single()
+                .execute()
+            let user: UserProfile = try JSONDecoder().decode(UserProfile.self, from: response.data)
+            sellerName = "\(user.Vorname) \(user.Nachname)"
+        } catch {
+            print("Fehler beim Laden des Verkäufernamens:", error)
+            sellerName = "Verkäufer"
+        }
+    }
 
     func sendRequest(for order: Order) async {
         errorMessage = nil
@@ -26,8 +43,8 @@ class OrderDetailViewModel: ObservableObject {
 
             let payload = AcceptedOrderPayload(
                 orderId: order.id,
-                createrId: order.userId,     // Ersteller des Auftrags
-                accepterId: Int64(userId)      // aktuell eingeloggter User
+                createrId: order.userId,
+                accepterId: Int64(userId)
             )
 
             try await supabase
