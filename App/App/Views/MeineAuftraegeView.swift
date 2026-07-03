@@ -67,42 +67,20 @@ struct MeineAuftraegeView: View {
                     Spacer()
                 } else {
                     List(filteredOrders) { order in
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Text(order.title)
-                                    .font(.headline)
-                                Spacer()
-                                if let price = order.price {
-                                    Text(String(format: "%.2f €", price))
-                                        .font(.subheadline)
-                                        .fontWeight(.semibold)
-                                        .foregroundColor(.green)
+                        Group {
+                            if order.accepterId != 0 {
+                                NavigationLink(destination: ChatView(
+                                    orderId: order.orderId,
+                                    orderTitle: order.title,
+                                    otherUserId: order.createrId == userId ? order.accepterId : order.createrId,
+                                    otherUserName: viewModel.name(for: order.createrId == userId ? order.accepterId : order.createrId)
+                                )) {
+                                    orderRow(order: order)
                                 }
-                            }
-
-                            Text(order.description)
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                                .lineLimit(2)
-
-                            Label(order.location, systemImage: "mappin")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-
-                            HStack {
-                                if order.createrId == userId, order.accepterId == 0 {
-                                    Label("Erstellt", systemImage: "person.badge.plus")
-                                        .font(.caption)
-                                        .foregroundColor(.blue)
-                                }
-                                if order.createrId == userId, order.accepterId != 0 {
-                                    Label("Angenommen von \(viewModel.name(for: order.accepterId))", systemImage: "hand.thumbsup")
-                                        .font(.caption)
-                                        .foregroundColor(.orange)
-                                }
+                            } else {
+                                orderRow(order: order)
                             }
                         }
-                        .padding(.vertical, 4)
                     }
                     .listStyle(.insetGrouped)
                 }
@@ -117,6 +95,63 @@ struct MeineAuftraegeView: View {
             guard userId > 0 else { return }
             await viewModel.loadOrders(for: userId)
         }
+    }
+
+    @ViewBuilder
+    private func orderRow(order: CombinedOrder) -> some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text(order.title)
+                        .font(.headline)
+                    Spacer()
+                    if let price = order.price {
+                        Text(String(format: "%.2f €", price))
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.green)
+                    }
+                }
+
+                Text(order.description)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .lineLimit(2)
+
+                Label(order.location, systemImage: "mappin")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                HStack {
+                    if order.createrId == userId, order.accepterId == 0 {
+                        Label("Erstellt", systemImage: "person.badge.plus")
+                            .font(.caption)
+                            .foregroundColor(.blue)
+                    }
+                    if order.accepterId != 0 {
+                        if order.createrId == userId {
+                            Label("Angenommen von \(viewModel.name(for: order.accepterId))", systemImage: "hand.thumbsup")
+                                .font(.caption)
+                                .foregroundColor(.orange)
+                        } else {
+                            Label("Erstellt von \(viewModel.name(for: order.createrId))", systemImage: "person")
+                                .font(.caption)
+                                .foregroundColor(.blue)
+                        }
+                    }
+                }
+            }
+
+            if order.unreadCount > 0 {
+                Text("\(order.unreadCount)")
+                    .font(.caption)
+                    .foregroundColor(.white)
+                    .padding(6)
+                    .background(Color.red)
+                    .clipShape(Circle())
+            }
+        }
+        .padding(.vertical, 4)
     }
 
 }
