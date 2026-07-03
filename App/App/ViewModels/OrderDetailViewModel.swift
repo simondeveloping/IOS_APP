@@ -16,6 +16,8 @@ class OrderDetailViewModel: ObservableObject {
     @Published var sellerName: String = ""
     
     
+    @Published var didAcceptOrder = false
+   
     @Published var isFavorite = false
     
     private var currentFavoriteId: Int?
@@ -39,6 +41,34 @@ class OrderDetailViewModel: ObservableObject {
     }
 
     // beim Öffnen der View aufrufen
+    
+    func sendRequest(for order: Order) async {
+            isLoading = true
+            errorMessage = nil
+
+            do {
+                let payload = AcceptedOrderPayload(
+                    orderId: order.id,
+                    createrId: order.userId,
+                    accepterId: Int64(userId)
+                )
+
+                try await supabase
+                    .from("AcceptedOrder")
+                    .insert(payload)
+                    .execute()
+
+                didAcceptOrder = true  // löst dismiss in der View aus
+
+            } catch {
+                print("Fehler beim Annehmen:", error)
+                errorMessage = "Auftrag konnte nicht angenommen werden."
+            }
+
+            isLoading = false
+        }
+
+    
         func loadCurrentUserAndFavoriteStatus(for order: Order) async {
             do {
                 // prüfen, ob bereits favorisiert
@@ -97,6 +127,7 @@ class OrderDetailViewModel: ObservableObject {
                 errorMessage = "Aktion konnte nicht ausgeführt werden."
             }
         }
+<<<<<<< HEAD
     
     func sendRequest(for order: Order) async {
         errorMessage = nil
@@ -123,4 +154,6 @@ class OrderDetailViewModel: ObservableObject {
 
         isLoading = false
     }
+=======
+>>>>>>> f47a519 (favouriten view)
 }

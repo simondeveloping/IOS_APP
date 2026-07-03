@@ -9,6 +9,7 @@ import SwiftUI
 struct OrderDetailView: View {
     let order: Order
     let categoryName: String
+    @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel = OrderDetailViewModel()
 
     var body: some View {
@@ -104,8 +105,18 @@ struct OrderDetailView: View {
         .background(Color(.systemGroupedBackground))
         .navigationTitle("Auftragsdetails")
         .navigationBarTitleDisplayMode(.inline)
+<<<<<<< HEAD
         .task {
             await viewModel.loadSellerName(for: Int(order.userId))
+=======
+        .onChange(of: viewModel.didAcceptOrder) { _, accepted in
+            if accepted {
+                dismiss()
+            }
+        }
+        .task {
+            await viewModel.loadCurrentUserAndFavoriteStatus(for: order)
+>>>>>>> f47a519 (favouriten view)
         }
     }
 

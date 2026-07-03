@@ -27,6 +27,7 @@ class HomeViewModel: ObservableObject {
     @Published var selectedCategoryId: Int?
 
     // Lade- und Fehlerstatus
+    @AppStorage("userId") var userId: Int = 0
     @Published var isLoading = false
     @Published var errorMessage: String?
 
@@ -68,7 +69,7 @@ class HomeViewModel: ObservableObject {
 
     private func loadRecommendations() async {
         do {
-            let currentUserId = await currentAppUserId()
+
             let allOrders: [Order] = try await supabase
                 .from("Order")
                 .select()
@@ -79,33 +80,12 @@ class HomeViewModel: ObservableObject {
 
             // Eigene Aufträge ausblenden, weil man sie nicht selbst annehmen soll
             recommendations = allOrders
-                .filter { currentUserId == nil || $0.userId != currentUserId }
+                .filter { $0.userId != userId }
                 .prefix(12)
                 .map { $0 }
         } catch {
             print("Fehler beim Laden der Empfehlungen:", error)
             errorMessage = "Empfehlungen konnten nicht geladen werden."
-        }
-    }
-
-    // Eigene User-ID laden, damit eigene Aufträge nicht empfohlen werden
-    private func currentAppUserId() async -> Int64? {
-        do {
-            let session = try await supabase.auth.session
-            guard let email = session.user.email else { return nil }
-
-            let appUser: HomeAppUser = try await supabase
-                .from("User")
-                .select("id")
-                .eq("email", value: email)
-                .single()
-                .execute()
-                .value
-
-            return appUser.id
-        } catch {
-            print("Fehler beim Laden des aktuellen Users:", error)
-            return nil
         }
     }
 }
