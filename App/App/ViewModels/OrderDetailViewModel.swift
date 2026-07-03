@@ -47,10 +47,13 @@ class OrderDetailViewModel: ObservableObject {
             errorMessage = nil
 
             do {
+                let token = UUID().uuidString
+                
                 let payload = AcceptedOrderPayload(
                     orderId: order.id,
                     createrId: order.userId,
-                    accepterId: Int64(userId)
+                    accepterId: Int64(userId),
+                    completionToken: token
                 )
 
                 try await supabase

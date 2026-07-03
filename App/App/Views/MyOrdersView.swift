@@ -10,6 +10,7 @@ struct MyOrdersView: View {
     @ObservedObject var viewModel: MyOrdersViewModel
     @State private var orderToEdit: Order?
     @State private var orderToDelete: Order?
+    @State private var showScanner = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -77,7 +78,6 @@ struct MyOrdersView: View {
             await viewModel.fetchMyOrders()
             await viewModel.loadCategories()
         }
-        // 3-Sekunden-Timer: sobald Banner sichtbar wird, nach 3s ausblenden
         .onChange(of: viewModel.showSuccessBanner) { _, isShowing in
             if isShowing {
                 Task {
@@ -87,6 +87,9 @@ struct MyOrdersView: View {
                     }
                 }
             }
+        }
+        .sheet(isPresented: $showScanner) {
+            OrderScannerSheetView()
         }
         .sheet(item: $orderToEdit) { order in
             EditOrderView(
