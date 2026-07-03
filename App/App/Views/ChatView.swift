@@ -69,8 +69,10 @@ struct ChatView: View {
         }
         .navigationTitle("Chat mit \(otherUserName)")
         .navigationBarTitleDisplayMode(.inline)
-        .task {
-            await viewModel.loadMessages(orderId: orderId, userId: userId, otherUserId: otherUserId)
+        .onAppear {
+            Task {
+                await viewModel.loadMessages(orderId: orderId, userId: userId, otherUserId: otherUserId)
+            }
         }
         .onDisappear {
             viewModel.unsubscribe()

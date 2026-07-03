@@ -53,25 +53,18 @@ struct HomeView: View {
         }
     }
 
-    // Einleitungsbereich
     private var banner: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 8)
                 .fill(Color(.secondarySystemGroupedBackground))
                 .frame(height: 160)
 
-            VStack(spacing: 10) {
-                Image(systemName: "hand.raised.fill")
-                    .font(.largeTitle)
-                    .foregroundStyle(.blue)
-
-                Text("Finde passende Hilfe")
-                    .font(.headline)
-
-                Text("Entdecke Aufträge in deiner Nähe.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
+            Image("Home")
+                .resizable()
+                .scaledToFill()
+                .frame(height: 160)
+                .clipped()
+                .opacity(0.85)
         }
     }
 
