@@ -25,10 +25,13 @@ class HomeViewModel: ObservableObject {
     @Published var categories: [Category] = []
     @Published var recommendations: [Order] = []
     @Published var selectedCategoryId: Int?
+    @Published var sellerNames: [Int64: String] = [:]
+    @Published var sellerRatings: [Int64: Double] = [:]
 
     // Lade- und Fehlerstatus
     @Published var isLoading = false
     @Published var errorMessage: String?
+    @Published var userAvatarPath: String?
 
     // Empfehlungen nach ausgewählter Kategorie filtern
     var filteredRecommendations: [Order] {
@@ -41,8 +44,11 @@ class HomeViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
 
+        await loadCurrentUserAvatar()
         await loadCategories()
         await loadRecommendations()
+        await loadSellerNames()
+        await loadSellerRatings()
 
         isLoading = false
     }
@@ -56,7 +62,7 @@ class HomeViewModel: ObservableObject {
         do {
             categories = try await supabase
                 .from("Category")
-                .select("id, title")
+                .select("id, title, image_path")
                 .order("title")
                 .execute()
                 .value
@@ -85,6 +91,69 @@ class HomeViewModel: ObservableObject {
         } catch {
             print("Fehler beim Laden der Empfehlungen:", error)
             errorMessage = "Empfehlungen konnten nicht geladen werden."
+        }
+    }
+
+    private func loadSellerNames() async {
+        let userIds = Set(recommendations.map { $0.userId })
+        for id in userIds {
+            do {
+                let user: UserProfile = try await supabase
+                    .from("User")
+                    .select()
+                    .eq("id", value: Int(id))
+                    .single()
+                    .execute()
+                    .value
+                sellerNames[id] = "\(user.Vorname) \(user.Nachname)"
+            } catch {
+                print("Fehler beim Laden des Verkäufernamens für \(id):", error)
+                sellerNames[id] = "Unbekannt"
+            }
+        }
+    }
+
+    private func loadSellerRatings() async {
+        let userIds = Set(recommendations.map { $0.userId })
+        for id in userIds {
+            do {
+                let ratings: [Rating] = try await supabase
+                    .from("Rating")
+                    .select()
+                    .eq("user_id", value: Int(id))
+                    .execute()
+                    .value
+                if !ratings.isEmpty {
+                    let total = ratings.reduce(0) { $0 + $1.stars }
+                    sellerRatings[id] = Double(total) / Double(ratings.count)
+                }
+            } catch {
+                print("Fehler beim Laden der Bewertungen für \(id):", error)
+            }
+        }
+    }
+
+    private struct AvatarResult: Decodable {
+        let Avatar: String?
+    }
+
+    private func loadCurrentUserAvatar() async {
+        do {
+            let session = try await supabase.auth.session
+            guard let email = session.user.email else { return }
+
+            let result: AvatarResult = try await supabase
+                .from("User")
+                .select("Avatar")
+                .eq("email", value: email)
+                .single()
+                .execute()
+                .value
+
+            userAvatarPath = result.Avatar
+            UserDefaults.standard.set(result.Avatar, forKey: "userAvatar")
+        } catch {
+            print("Fehler beim Laden des Avatars:", error)
         }
     }
 

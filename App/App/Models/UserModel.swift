@@ -11,4 +11,10 @@ struct UserProfile: Encodable, Decodable ,Equatable{
     let email: String
     let Vorname: String
     let Nachname: String
+    var avatar: String? = nil
+
+    enum CodingKeys: String, CodingKey {
+        case id, email, Vorname, Nachname
+        case avatar = "Avatar"
+    }
 }

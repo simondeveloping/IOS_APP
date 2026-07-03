@@ -99,6 +99,20 @@ struct EntdeckenView: View {
             .font(.caption)
             .foregroundStyle(.secondary)
 
+            HStack(spacing: 4) {
+                Label(viewModel.sellerNames[order.userId] ?? "Unbekannt", systemImage: "person")
+                if let rating = viewModel.sellerRatings[order.userId] {
+                    Image(systemName: "star.fill")
+                        .font(.system(size: 9))
+                        .foregroundColor(.yellow)
+                    Text(String(format: "%.1f", rating))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
+
             if let price = order.price {
                 Text(price, format: .currency(code: Locale.current.currency?.identifier ?? "EUR"))
                     .font(.subheadline)

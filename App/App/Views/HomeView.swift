@@ -9,6 +9,8 @@ import SwiftUI
 struct HomeView: View {
     @StateObject private var viewModel = HomeViewModel()
     @AppStorage("userVorname") private var userVorname: String = ""
+    @State private var showAllCategories = false
+    @State private var showAllRecommendations = false
 
     var body: some View {
         NavigationStack {
@@ -29,6 +31,19 @@ struct HomeView: View {
             .task {
                 await viewModel.loadHomeData()
             }
+            .sheet(isPresented: $showAllCategories) {
+                AllCategoriesView(
+                    categories: viewModel.categories,
+                    selectedCategoryId: $viewModel.selectedCategoryId,
+                    isPresented: $showAllCategories
+                )
+            }
+            .sheet(isPresented: $showAllRecommendations) {
+                AllRecommendationsView(
+                    viewModel: viewModel,
+                    isPresented: $showAllRecommendations
+                )
+            }
         }
     }
 
@@ -47,10 +62,44 @@ struct HomeView: View {
 
             Spacer()
 
-            Image(systemName: "person.crop.circle.fill")
-                .font(.system(size: 58))
-                .foregroundStyle(Color(.systemGray3))
+            avatarView
         }
+    }
+
+    @ViewBuilder
+    private var avatarView: some View {
+        let avatarPath = viewModel.userAvatarPath ?? UserDefaults.standard.string(forKey: "userAvatar")
+        if let avatarPath, !avatarPath.isEmpty, let url = avatarURL(path: avatarPath) {
+            AsyncImage(url: url) { phase in
+                if let image = phase.image {
+                    image
+                        .resizable()
+                        .scaledToFill()
+                } else if phase.error != nil {
+                    fallbackAvatar
+                } else {
+                    ProgressView()
+                }
+            }
+            .frame(width: 58, height: 58)
+            .clipShape(Circle())
+        } else {
+            fallbackAvatar
+        }
+    }
+
+    private var fallbackAvatar: some View {
+        Image(systemName: "person.crop.circle.fill")
+            .font(.system(size: 58))
+            .foregroundStyle(Color(.systemGray3))
+    }
+
+    private func avatarURL(path: String) -> URL? {
+        if path.hasPrefix("http://") || path.hasPrefix("https://") {
+            return URL(string: path)
+        }
+        let encoded = path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? path
+        return URL(string: "https://ymwiiobmwzhdyvmpnebg.supabase.co/storage/v1/object/public/avatar/\(encoded)")
     }
 
     private var banner: some View {
@@ -72,7 +121,7 @@ struct HomeView: View {
     private var categories: some View {
         VStack(alignment: .leading, spacing: 12) {
             sectionTitle("Kategorien") {
-                viewModel.selectedCategoryId = nil
+                showAllCategories = true
             }
 
             if viewModel.categories.isEmpty && viewModel.isLoading {
@@ -95,7 +144,7 @@ struct HomeView: View {
     private var recommendations: some View {
         VStack(alignment: .leading, spacing: 12) {
             sectionTitle("Empfehlungen für dich") {
-                viewModel.selectedCategoryId = nil
+                showAllRecommendations = true
             }
 
             if let errorMessage = viewModel.errorMessage {
@@ -144,12 +193,26 @@ struct HomeView: View {
             viewModel.toggleCategory(category)
         } label: {
             VStack(spacing: 10) {
-                Image(systemName: "square.grid.2x2.fill")
-                    .font(.title2)
-                    .foregroundStyle(isSelected ? .white : .blue)
-                    .frame(width: 48, height: 48)
-                    .background(isSelected ? Color.blue : Color.blue.opacity(0.12))
-                    .clipShape(Circle())
+                Group {
+                    if let imagePath = category.imagePath, !imagePath.isEmpty, let url = categoryImageURL(path: imagePath) {
+                        AsyncImage(url: url) { phase in
+                            if let image = phase.image {
+                                image
+                                    .resizable()
+                                    .scaledToFill()
+                            } else if phase.error != nil {
+                                fallbackIcon(isSelected: isSelected)
+                            } else {
+                                ProgressView()
+                            }
+                        }
+                    } else {
+                        fallbackIcon(isSelected: isSelected)
+                    }
+                }
+                .frame(width: 48, height: 48)
+                .background(isSelected ? Color.blue : Color.blue.opacity(0.12))
+                .clipShape(Circle())
 
                 Text(category.title)
                     .font(.caption)
@@ -157,10 +220,22 @@ struct HomeView: View {
                     .lineLimit(1)
             }
             .frame(width: 105, height: 105)
-            .background(Color(.secondarySystemGroupedBackground))
+            .background(isSelected ? Color.blue : Color(.secondarySystemGroupedBackground))
+            .foregroundStyle(isSelected ? .white : .primary)
             .clipShape(RoundedRectangle(cornerRadius: 8))
         }
         .buttonStyle(.plain)
+    }
+
+    private func fallbackIcon(isSelected: Bool) -> some View {
+        Image(systemName: "square.grid.2x2.fill")
+            .font(.title2)
+            .foregroundStyle(isSelected ? .white : .blue)
+    }
+
+    private func categoryImageURL(path: String) -> URL? {
+        let encoded = path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? path
+        return URL(string: "https://ymwiiobmwzhdyvmpnebg.supabase.co/storage/v1/object/public/category-images/\(encoded)")
     }
 
     private func recommendationCard(_ order: Order) -> some View {
@@ -186,6 +261,20 @@ struct HomeView: View {
                 Label(order.location, systemImage: "mappin.and.ellipse")
                 Spacer()
                 Text(order.date.formatted(date: .abbreviated, time: .omitted))
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
+
+            HStack(spacing: 4) {
+                Label(viewModel.sellerNames[order.userId] ?? "Unbekannt", systemImage: "person")
+                if let rating = viewModel.sellerRatings[order.userId] {
+                    Image(systemName: "star.fill")
+                        .font(.system(size: 9))
+                        .foregroundColor(.yellow)
+                    Text(String(format: "%.1f", rating))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
             .font(.caption)
             .foregroundStyle(.secondary)
@@ -223,6 +312,134 @@ struct HomeView: View {
         }
 
         return "Aktuell gibt es keine passenden Aufträge."
+    }
+}
+
+private struct AllCategoriesView: View {
+    let categories: [Category]
+    @Binding var selectedCategoryId: Int?
+    @Binding var isPresented: Bool
+
+    var body: some View {
+        NavigationStack {
+            List(categories) { category in
+                Button {
+                    selectedCategoryId = category.id
+                    isPresented = false
+                } label: {
+                    HStack(spacing: 12) {
+                        if let imagePath = category.imagePath, !imagePath.isEmpty {
+                            AsyncImage(url: URL(string: "https://ymwiiobmwzhdyvmpnebg.supabase.co/storage/v1/object/public/category-images/\(imagePath.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? imagePath)")) { phase in
+                                if let image = phase.image {
+                                    image
+                                        .resizable()
+                                        .scaledToFill()
+                                } else if phase.error != nil {
+                                    Image(systemName: "square.grid.2x2.fill")
+                                        .font(.title3)
+                                        .foregroundStyle(.blue)
+                                } else {
+                                    ProgressView()
+                                }
+                            }
+                            .frame(width: 40, height: 40)
+                            .background(Color.blue.opacity(0.12))
+                            .clipShape(Circle())
+                        } else {
+                            Image(systemName: "square.grid.2x2.fill")
+                                .font(.title3)
+                                .foregroundStyle(.blue)
+                                .frame(width: 40, height: 40)
+                                .background(Color.blue.opacity(0.12))
+                                .clipShape(Circle())
+                        }
+
+                        Text(category.title)
+                            .font(.body)
+                            .foregroundStyle(.primary)
+
+                        Spacer()
+
+                        if selectedCategoryId == category.id {
+                            Image(systemName: "checkmark")
+                                .foregroundStyle(.blue)
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Alle Kategorien")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Schließen") {
+                        isPresented = false
+                    }
+                }
+            }
+        }
+    }
+}
+
+private struct AllRecommendationsView: View {
+    @ObservedObject var viewModel: HomeViewModel
+    @Binding var isPresented: Bool
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if viewModel.filteredRecommendations.isEmpty {
+                    ContentUnavailableView(
+                        "Keine Empfehlungen",
+                        systemImage: "hand.thumbsdown",
+                        description: Text("Aktuell gibt es keine passenden Aufträge.")
+                    )
+                } else {
+                    List(viewModel.filteredRecommendations) { order in
+                        NavigationLink {
+                            OrderDetailView(order: order, categoryName: categoryName(for: order))
+                        } label: {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(order.title)
+                                    .font(.headline)
+
+                                Text(order.description)
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(2)
+
+                                HStack(spacing: 12) {
+                                    Label(order.location, systemImage: "mappin.and.ellipse")
+                                    Text(order.date.formatted(date: .abbreviated, time: .omitted))
+                                }
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+
+                                if let price = order.price {
+                                    Text(price, format: .currency(code: Locale.current.currency?.identifier ?? "EUR"))
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                }
+                            }
+                            .padding(.vertical, 4)
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Empfehlungen")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Schließen") {
+                        isPresented = false
+                    }
+                }
+            }
+        }
+    }
+
+    private func categoryName(for order: Order) -> String {
+        guard let categoryId = order.categoryId else { return "Keine Kategorie" }
+        return viewModel.categories.first { $0.id == Int(categoryId) }?.title ?? "Keine Kategorie"
     }
 }
 

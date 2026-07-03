@@ -78,7 +78,7 @@ class MyOrdersViewModel: ObservableObject {
         do {
             categories = try await supabase
                 .from("Category")
-                .select("id, title")
+                .select("id, title, image_path")
                 .order("title")
                 .execute()
                 .value

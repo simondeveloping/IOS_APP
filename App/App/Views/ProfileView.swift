@@ -15,6 +15,7 @@ struct ProfileView: View {
     @AppStorage("userVorname") var userVorname: String = ""
     @AppStorage("userNachname") var userNachname: String = ""
     @AppStorage("userId") var userId: Int = 0
+    @AppStorage("userAvatar") var userAvatar: String = ""
     
     var body: some View {
         NavigationView {
@@ -22,11 +23,7 @@ struct ProfileView: View {
                 VStack(spacing: 24) {
                     
                     HStack(spacing: 16) {
-                        Image(systemName: "person.crop.circle.fill")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 70, height: 70)
-                            .foregroundColor(.gray)
+                        profileAvatar
                         
                         VStack(alignment: .leading, spacing: 4) {
                             // Hier ist der Name jetzt dynamisch!
@@ -127,10 +124,48 @@ struct ProfileView: View {
             .task {
                 guard userId > 0 else { return }
                 await viewModel.loadRatings(for: userId)
+                await viewModel.loadProfile(for: userId)
             }
         }
     }
     
+    @ViewBuilder
+    private var profileAvatar: some View {
+        if !userAvatar.isEmpty, let url = avatarURL(path: userAvatar) {
+            AsyncImage(url: url) { phase in
+                if let image = phase.image {
+                    image
+                        .resizable()
+                        .scaledToFill()
+                } else if phase.error != nil {
+                    fallbackAvatar
+                } else {
+                    ProgressView()
+                }
+            }
+            .frame(width: 70, height: 70)
+            .clipShape(Circle())
+        } else {
+            fallbackAvatar
+        }
+    }
+
+    private var fallbackAvatar: some View {
+        Image(systemName: "person.crop.circle.fill")
+            .resizable()
+            .scaledToFit()
+            .frame(width: 70, height: 70)
+            .foregroundColor(.gray)
+    }
+
+    private func avatarURL(path: String) -> URL? {
+        if path.hasPrefix("http://") || path.hasPrefix("https://") {
+            return URL(string: path)
+        }
+        let encoded = path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? path
+        return URL(string: "https://ymwiiobmwzhdyvmpnebg.supabase.co/storage/v1/object/public/avatar/\(encoded)")
+    }
+
     func logoutUser() async {
         do {
            

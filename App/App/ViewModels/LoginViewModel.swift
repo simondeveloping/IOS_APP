@@ -45,6 +45,7 @@ class LoginViewModel: ObservableObject {
             }
             UserDefaults.standard.set(profile.Vorname, forKey: "userVorname")
             UserDefaults.standard.set(profile.Nachname, forKey: "userNachname")
+            UserDefaults.standard.set(profile.avatar, forKey: "userAvatar")
             
             self.isLoading = false
             UserDefaults.standard.set(true, forKey: "isLoggedIn")
