@@ -13,8 +13,9 @@ struct AcceptedOrder: Codable, Identifiable {
     let creater_id: Int
     let accepter_id: Int
     let created_at: String?
+    let completion_token: String?
+    let is_completed: Bool?
 }
-
 
 struct Order: Decodable, Identifiable {
     let id: Int64

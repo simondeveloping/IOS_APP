@@ -12,8 +12,9 @@ struct AcceptedOrderItem: Identifiable {
     let date: Date
     let createdAt: String?
     var createrName: String = "Unbekannt"
+    let completionToken: String?   // neu
+    let isCompleted: Bool          // neu
 }
-
 @MainActor
 class AngenommeneAuftraegeViewModel: ObservableObject {
     @Published var orders: [AcceptedOrderItem] = []
@@ -31,7 +32,10 @@ class AngenommeneAuftraegeViewModel: ObservableObject {
                 .order("created_at", ascending: false)
                 .execute()
 
-            let acceptedOrders: [AcceptedOrder] = try JSONDecoder().decode([AcceptedOrder].self, from: response.data)
+            let acceptedOrders: [AcceptedOrder] = try JSONDecoder().decode(
+                [AcceptedOrder].self,
+                from: response.data
+            )
 
             let orderIds = acceptedOrders.map { $0.order_id }
             var orderMap: [Int: Order] = [:]
@@ -43,7 +47,10 @@ class AngenommeneAuftraegeViewModel: ObservableObject {
                     .in("id", values: orderIds)
                     .execute()
 
-                let orderItems: [Order] = try JSONDecoder().decode([Order].self, from: orderResponse.data)
+                let orderItems: [Order] = try JSONDecoder().decode(
+                    [Order].self,
+                    from: orderResponse.data
+                )
                 orderMap = Dictionary(uniqueKeysWithValues: orderItems.map { (Int($0.id), $0) })
             }
 
@@ -58,7 +65,9 @@ class AngenommeneAuftraegeViewModel: ObservableObject {
                     price: order.price,
                     location: order.location,
                     date: order.date,
-                    createdAt: accepted.created_at
+                    createdAt: accepted.created_at,
+                    completionToken: accepted.completion_token,  // neu
+                    isCompleted: accepted.is_completed ?? false   // neu
                 )
             }
 
@@ -72,7 +81,10 @@ class AngenommeneAuftraegeViewModel: ObservableObject {
                         .eq("id", value: id)
                         .single()
                         .execute()
-                    let user: UserProfile = try JSONDecoder().decode(UserProfile.self, from: userResponse.data)
+                    let user: UserProfile = try JSONDecoder().decode(
+                        UserProfile.self,
+                        from: userResponse.data
+                    )
                     names[id] = "\(user.Vorname) \(user.Nachname)"
                 } catch {
                     print("Konnte Benutzer \(id) nicht laden:", error)
@@ -86,6 +98,7 @@ class AngenommeneAuftraegeViewModel: ObservableObject {
             }
 
             orders = items
+
         } catch {
             print("Fehler beim Laden der angenommenen Aufträge:", error)
             errorMessage = "Aufträge konnten nicht geladen werden"
