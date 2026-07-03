@@ -9,7 +9,7 @@ import SwiftUI
 struct HomeView: View {
     @StateObject private var viewModel = HomeViewModel()
     @AppStorage("userVorname") private var userVorname: String = ""
-
+    @AppStorage("userId") private var userId : Int = 0
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -24,10 +24,10 @@ struct HomeView: View {
             .background(Color(.systemGroupedBackground))
             .navigationBarHidden(true)
             .refreshable {
-                await viewModel.loadHomeData()
+                await viewModel.loadHomeData(userId : userId)
             }
             .task {
-                await viewModel.loadHomeData()
+                await viewModel.loadHomeData(userId : userId)
             }
         }
     }

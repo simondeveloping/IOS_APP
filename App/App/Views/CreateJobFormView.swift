@@ -8,7 +8,8 @@ import SwiftUI
 
 struct CreateJobFormView: View {
     @ObservedObject var vm: ErstellenViewModel
-
+    @Environment(\.dismiss) private var dismiss
+    
     init(viewModel: ErstellenViewModel) {
         self.vm = viewModel
     }
@@ -224,6 +225,16 @@ struct CreateJobFormView: View {
             .task {
                 await vm.loadCategories()
             }
+            .onChange(of: vm.didCreateJob) { _, created in
+                            if created {
+                                dismiss()
+                            }
+                        }
+                        .alert("Fehler", isPresented: .constant(vm.errorMessage != nil)) {
+                            Button("OK") { vm.errorMessage = nil }
+                        } message: {
+                            Text(vm.errorMessage ?? "")
+                        }
         }
     }
 }

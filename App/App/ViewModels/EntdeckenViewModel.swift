@@ -82,6 +82,8 @@ class EntdeckenViewModel: ObservableObject {
 
     private func fetchOrders() async {
         do {
+            let acceptedIds = (try? await OrderFilter.acceptedOrderIds()) ?? []
+            
             let orders: [Order] = try await supabase
                 .from("Order")
                 .select()
@@ -91,7 +93,9 @@ class EntdeckenViewModel: ObservableObject {
                 .value
 
             if let currentUserId {
-                allOrders = orders.filter { $0.userId != currentUserId }
+                allOrders = orders.filter {
+                    $0.userId != currentUserId && !acceptedIds.contains(Int($0.id))
+                }
             } else {
                 allOrders = orders
             }
