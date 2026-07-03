@@ -18,19 +18,19 @@ struct OrderDetailView: View {
                 Text(order.title)
                     .font(.largeTitle)
                     .fontWeight(.bold)
-
+                
                 detailRow("Kategorie", categoryName, icon: "square.grid.2x2")
                 detailRow("Ort", order.location, icon: "mappin.and.ellipse")
                 detailRow("Datum", order.date.formatted(date: .long, time: .omitted), icon: "calendar")
                 detailRow("Flexible Uhrzeit", order.isFlexibleTime ? "Ja" : "Nein", icon: "clock")
-
+                
                 if let price = order.price {
                     detailRow("Preisvorstellung", price.formatted(.currency(code: Locale.current.currency?.identifier ?? "EUR")), icon: "eurosign.circle")
                 }
-
+                
                 detailText("Beschreibung", order.description)
                 detailText("Zusätzliche Hinweise", order.notes.isEmpty ? "Keine Hinweise" : order.notes)
-
+                
                 HStack {
                     NavigationLink {
                         ChatView(
@@ -76,15 +76,15 @@ struct OrderDetailView: View {
             }
             .padding()
             .alert("Fehler", isPresented: .constant(viewModel.errorMessage != nil)) {
-                        Button("OK") { viewModel.errorMessage = nil }
-                    } message: {
-                        Text(viewModel.errorMessage ?? "")
-                    }
-                    .alert("Erfolg", isPresented: .constant(viewModel.successMessage != nil)) {
-                        Button("OK") { viewModel.successMessage = nil }
-                    } message: {
-                        Text(viewModel.successMessage ?? "")
-                    }
+                Button("OK") { viewModel.errorMessage = nil }
+            } message: {
+                Text(viewModel.errorMessage ?? "")
+            }
+            .alert("Erfolg", isPresented: .constant(viewModel.successMessage != nil)) {
+                Button("OK") { viewModel.successMessage = nil }
+            } message: {
+                Text(viewModel.successMessage ?? "")
+            }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -94,31 +94,30 @@ struct OrderDetailView: View {
                         }
                     } label: {
                         Image(systemName: viewModel.isFavorite ? "heart.fill" : "heart")
-                        .foregroundColor(viewModel.isFavorite ? .red : .gray)
+                            .foregroundColor(viewModel.isFavorite ? .red : .gray)
                     }
                 }
             }
             .task {
-            await viewModel.loadCurrentUserAndFavoriteStatus(for: order)
+                await viewModel.loadCurrentUserAndFavoriteStatus(for: order)
             }
         }
         .background(Color(.systemGroupedBackground))
         .navigationTitle("Auftragsdetails")
         .navigationBarTitleDisplayMode(.inline)
-<<<<<<< HEAD
         .task {
             await viewModel.loadSellerName(for: Int(order.userId))
-=======
+        }
+        .task {
+            await viewModel.loadCurrentUserAndFavoriteStatus(for: order)
+        }
         .onChange(of: viewModel.didAcceptOrder) { _, accepted in
             if accepted {
                 dismiss()
             }
         }
-        .task {
-            await viewModel.loadCurrentUserAndFavoriteStatus(for: order)
->>>>>>> f47a519 (favouriten view)
-        }
     }
+}
 
     private func detailRow(_ title: String, _ value: String, icon: String) -> some View {
         HStack(spacing: 12) {
@@ -157,4 +156,4 @@ struct OrderDetailView: View {
         .background(Color(.secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
-}
+

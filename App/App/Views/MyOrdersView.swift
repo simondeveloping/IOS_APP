@@ -12,49 +12,81 @@ struct MyOrdersView: View {
     @State private var orderToDelete: Order?
 
     var body: some View {
-        Group {
-            if viewModel.isLoading && viewModel.orders.isEmpty {
-                ProgressView()
-            } else if viewModel.orders.isEmpty {
-                ContentUnavailableView(
-                    "Keine Aufträge",
-                    systemImage: "doc.text",
-                    description: Text("Du hast noch keine Aufträge erstellt.")
-                )
-            } else {
-                List {
-                    if let errorMessage = viewModel.errorMessage {
-                        Text(errorMessage)
-                            .font(.footnote)
-                            .foregroundStyle(.red)
-                    }
+        VStack(spacing: 0) {
 
-                    ForEach(viewModel.orders) { order in
-                        OrderRowView(order: order)
-                            .swipeActions(edge: .trailing) {
-                                Button(role: .destructive) {
-                                    orderToDelete = order
-                                } label: {
-                                    Label("Löschen", systemImage: "trash")
-                                }
-
-                                Button {
-                                    orderToEdit = order
-                                } label: {
-                                    Label("Bearbeiten", systemImage: "pencil")
-                                }
-                                .tint(.blue)
-                            }
-                    }
+            // Erfolgs-Banner
+            if viewModel.showSuccessBanner {
+                HStack(spacing: 10) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(.green)
+                    Text("Auftrag erfolgreich erstellt!")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                    Spacer()
                 }
-                .refreshable {
-                    await viewModel.fetchMyOrders()
+                .padding()
+                .background(Color.green.opacity(0.15))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .padding(.horizontal)
+                .padding(.top, 8)
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
+
+            Group {
+                if viewModel.isLoading && viewModel.orders.isEmpty {
+                    ProgressView()
+                } else if viewModel.orders.isEmpty {
+                    ContentUnavailableView(
+                        "Keine Aufträge",
+                        systemImage: "doc.text",
+                        description: Text("Du hast noch keine Aufträge erstellt.")
+                    )
+                } else {
+                    List {
+                        if let errorMessage = viewModel.errorMessage {
+                            Text(errorMessage)
+                                .font(.footnote)
+                                .foregroundStyle(.red)
+                        }
+
+                        ForEach(viewModel.orders) { order in
+                            OrderRowView(order: order)
+                                .swipeActions(edge: .trailing) {
+                                    Button(role: .destructive) {
+                                        orderToDelete = order
+                                    } label: {
+                                        Label("Löschen", systemImage: "trash")
+                                    }
+
+                                    Button {
+                                        orderToEdit = order
+                                    } label: {
+                                        Label("Bearbeiten", systemImage: "pencil")
+                                    }
+                                    .tint(.blue)
+                                }
+                        }
+                    }
+                    .refreshable {
+                        await viewModel.fetchMyOrders()
+                    }
                 }
             }
         }
         .task {
             await viewModel.fetchMyOrders()
             await viewModel.loadCategories()
+        }
+        // 3-Sekunden-Timer: sobald Banner sichtbar wird, nach 3s ausblenden
+        .onChange(of: viewModel.showSuccessBanner) { _, isShowing in
+            if isShowing {
+                Task {
+                    try? await Task.sleep(for: .seconds(3))
+                    withAnimation {
+                        viewModel.showSuccessBanner = false
+                    }
+                }
+            }
         }
         .sheet(item: $orderToEdit) { order in
             EditOrderView(
@@ -168,14 +200,10 @@ private struct EditOrderView: View {
             Form {
                 Section("Auftrag") {
                     TextField("Titel", text: $title)
-
                     TextField("Ort", text: $location)
-
                     TextField("Preis", text: $price)
                         .keyboardType(.decimalPad)
-
                     DatePicker("Datum", selection: $date, displayedComponents: .date)
-
                     Toggle("Flexible Uhrzeit", isOn: $isFlexibleTime)
                 }
 

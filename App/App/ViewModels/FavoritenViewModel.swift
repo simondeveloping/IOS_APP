@@ -22,6 +22,7 @@ class FavoritenViewModel: ObservableObject {
         errorMessage = nil
 
         do {
+            let acceptedIds = (try? await OrderFilter.acceptedOrderIds()) ?? []
             // Alle Favoriten des Users holen
             let favorites: [Favorite] = try await supabase
                 .from("Favorites")
@@ -47,7 +48,7 @@ class FavoritenViewModel: ObservableObject {
                 .execute()
                 .value
 
-            favoriteOrders = orders
+            favoriteOrders = orders.filter { !acceptedIds.contains(Int($0.id)) }
 
         } catch {
             print("Fehler beim Laden der Favoriten:", error)

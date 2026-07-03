@@ -27,7 +27,6 @@ class HomeViewModel: ObservableObject {
     @Published var selectedCategoryId: Int?
 
     // Lade- und Fehlerstatus
-    @AppStorage("userId") var userId: Int = 0
     @Published var isLoading = false
     @Published var errorMessage: String?
 
@@ -38,12 +37,12 @@ class HomeViewModel: ObservableObject {
     }
 
     // Kategorien und Aufträge laden
-    func loadHomeData() async {
+    func loadHomeData(userId : Int) async {
         isLoading = true
         errorMessage = nil
 
         await loadCategories()
-        await loadRecommendations()
+        await loadRecommendations(userId : userId)
 
         isLoading = false
     }
@@ -67,9 +66,10 @@ class HomeViewModel: ObservableObject {
         }
     }
 
-    private func loadRecommendations() async {
+    private func loadRecommendations(userId : Int) async {
         do {
-
+            let acceptedIds = (try? await OrderFilter.acceptedOrderIds()) ?? []
+            
             let allOrders: [Order] = try await supabase
                 .from("Order")
                 .select()
@@ -80,7 +80,7 @@ class HomeViewModel: ObservableObject {
 
             // Eigene Aufträge ausblenden, weil man sie nicht selbst annehmen soll
             recommendations = allOrders
-                .filter { $0.userId != userId }
+                .filter { $0.userId != userId && !acceptedIds.contains(Int($0.id)) }
                 .prefix(12)
                 .map { $0 }
         } catch {

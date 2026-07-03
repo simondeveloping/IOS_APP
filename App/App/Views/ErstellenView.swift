@@ -8,8 +8,8 @@ import SwiftUI
 
 struct ErstellenView: View {
     @State private var selectedTab = 0
-    @StateObject private var ordersViewModel = MyOrdersViewModel() 
-    @StateObject private var createViewModel = ErstellenViewModel() // ViewModel zum Erstellen eines neuen Auftrages
+    @StateObject private var ordersViewModel = MyOrdersViewModel()
+    @StateObject private var createViewModel = ErstellenViewModel()
 
     var body: some View {
         VStack(spacing: 0) {
@@ -21,16 +21,28 @@ struct ErstellenView: View {
             .padding()
 
             if selectedTab == 0 {
-                MyOrdersView(viewModel: ordersViewModel) // View der eigenen Aufträge
+                MyOrdersView(viewModel: ordersViewModel)
             } else {
-                CreateJobFormView(viewModel: createViewModel) // Erstellen eines Auftrages View
+                CreateJobFormView(viewModel: createViewModel)
             }
         }
-        .onChange(of: selectedTab) { newTab in
+        .onChange(of: selectedTab) { _, newTab in
             if newTab == 0 {
                 Task {
                     await ordersViewModel.fetchMyOrders()
                 }
+            }
+        }
+        .onChange(of: createViewModel.didCreateJob) { _, created in
+            if created {
+                withAnimation {
+                    selectedTab = 0
+                }
+                ordersViewModel.showBannerAndHide()
+                Task {
+                    await ordersViewModel.fetchMyOrders()
+                }
+                createViewModel.didCreateJob = false
             }
         }
     }

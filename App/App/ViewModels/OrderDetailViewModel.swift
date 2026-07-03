@@ -127,33 +127,6 @@ class OrderDetailViewModel: ObservableObject {
                 errorMessage = "Aktion konnte nicht ausgeführt werden."
             }
         }
-<<<<<<< HEAD
+
     
-    func sendRequest(for order: Order) async {
-        errorMessage = nil
-        isLoading = true
-
-        do {
-            let payload = AcceptedOrderPayload(
-                orderId: order.id,
-                createrId: order.userId,
-                accepterId: Int64(userId)
-            )
-
-            try await supabase
-                .from("AcceptedOrder")
-                .insert(payload)
-                .execute()
-
-            successMessage = "Anfrage erfolgreich gesendet!"
-
-        } catch {
-            print("Fehler beim Senden der Anfrage:", error)
-            errorMessage = "Anfrage konnte nicht gesendet werden."
-        }
-
-        isLoading = false
-    }
-=======
->>>>>>> f47a519 (favouriten view)
 }

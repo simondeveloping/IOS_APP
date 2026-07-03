@@ -42,6 +42,19 @@ class MyOrdersViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var isSaving = false
     @Published var errorMessage: String?
+    @Published var showSuccessBanner = false
+
+    func showBannerAndHide() {
+        withAnimation {
+            showSuccessBanner = true
+        }
+        Task {
+            try? await Task.sleep(for: .seconds(3))
+            withAnimation {
+                showSuccessBanner = false
+            }
+        }
+    }
 
     func fetchMyOrders() async {
         isLoading = true
