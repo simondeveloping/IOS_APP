@@ -31,6 +31,9 @@ class ErstellenViewModel: ObservableObject {
     
     // Fehler Property
     @Published var errorMessage: String?
+    
+    @Published var didCreateJob = false
+    
     // Kategorien laden
     func loadCategories() async {
         do {
@@ -106,6 +109,8 @@ class ErstellenViewModel: ObservableObject {
             date = Date()
             flexibleTime = true
             notes = ""
+            
+            didCreateJob = true
 
         } catch {
             print("Fehler beim Erstellen:", error)
