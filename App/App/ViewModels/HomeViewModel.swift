@@ -46,9 +46,9 @@ class HomeViewModel: ObservableObject {
 
         await loadCurrentUserAvatar()
         await loadCategories()
+        await loadRecommendations(userId : userId)
         await loadSellerNames()
         await loadSellerRatings()
-        await loadRecommendations(userId : userId)
 
         isLoading = false
     }

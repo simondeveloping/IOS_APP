@@ -51,7 +51,7 @@ class AngenommeneAuftraegeViewModel: ObservableObject {
                     [Order].self,
                     from: orderResponse.data
                 )
-                orderMap = Dictionary(uniqueKeysWithValues: orderItems.map { (Int($0.id), $0) })
+                orderMap = Dictionary(orderItems.map { (Int($0.id), $0) }) { _, last in last }
             }
 
             var items: [AcceptedOrderItem] = acceptedOrders.compactMap { accepted in

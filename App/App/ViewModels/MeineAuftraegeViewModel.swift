@@ -53,7 +53,7 @@ class MeineAuftraegeViewModel: ObservableObject {
                     .execute()
 
                 let orderItems: [Order] = try JSONDecoder().decode([Order].self, from: response2.data)
-                orderMap = Dictionary(uniqueKeysWithValues: orderItems.map { (Int($0.id), $0) })
+                orderMap = Dictionary(orderItems.map { (Int($0.id), $0) }) { _, last in last }
             }
 
             var combined: [CombinedOrder] = acceptedOrders.compactMap { accepted in
