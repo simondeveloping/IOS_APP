@@ -14,7 +14,6 @@ struct Rating: Identifiable, Decodable {
     let title: String
     let user_id: Int
     let fromUser_id: Int
-    let order_id: Int
 }
 
 struct RatingPayload: Encodable {
@@ -23,5 +22,4 @@ struct RatingPayload: Encodable {
     let title: String
     let user_id: Int
     let fromUser_id: Int
-    let order_id: Int
 }

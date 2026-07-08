@@ -81,8 +81,7 @@ class QRScannerViewModel: ObservableObject {
     }
 
     func submitRating(stars: Int, title: String, description: String, fromUserId: Int) async {
-        guard let orderId = completedOrderId,
-              let accepterId = completedAccepterId else { return }
+        guard let accepterId = completedAccepterId else { return }
 
         isLoading = true
         errorMessage = nil
@@ -93,8 +92,7 @@ class QRScannerViewModel: ObservableObject {
                 stars: stars,
                 title: title,
                 user_id: accepterId,
-                fromUser_id: fromUserId,
-                order_id: orderId
+                fromUser_id: fromUserId
             )
 
             try await supabase
