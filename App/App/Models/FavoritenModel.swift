@@ -5,9 +5,9 @@
 //  Created by Merry on 26.06.26.
 //
 struct Favorite: Decodable {
-    let id: Int64
-    let userId: Int64
-    let orderId: Int64
+    let id: Int
+    let userId: Int
+    let orderId: Int
 
     enum CodingKeys: String, CodingKey {
         case id

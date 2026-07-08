@@ -10,7 +10,7 @@ import Combine
 import Supabase
 
 private struct MyOrdersAppUser: Decodable {
-    let id: Int64
+    let id: Int
 }
 
 struct EditOrderDraft {

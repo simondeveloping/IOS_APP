@@ -9,14 +9,14 @@ import Combine
 import Supabase
 
 private struct HomeAppUser: Decodable {
-    let id: Int64
+    let id: Int
 }
 
 private struct AcceptedOrderRequest: Encodable {
     let created_at: String
-    let order_id: Int64
-    let creator_id: Int64
-    let accepter_id: Int64
+    let order_id: Int
+    let creator_id: Int
+    let accepter_id: Int
 }
 
 @MainActor
@@ -25,8 +25,8 @@ class HomeViewModel: ObservableObject {
     @Published var categories: [Category] = []
     @Published var recommendations: [Order] = []
     @Published var selectedCategoryId: Int?
-    @Published var sellerNames: [Int64: String] = [:]
-    @Published var sellerRatings: [Int64: Double] = [:]
+    @Published var sellerNames: [Int: String] = [:]
+    @Published var sellerRatings: [Int: Double] = [:]
 
     // Lade- und Fehlerstatus
     @Published var isLoading = false
@@ -36,7 +36,7 @@ class HomeViewModel: ObservableObject {
     // Empfehlungen nach ausgewählter Kategorie filtern
     var filteredRecommendations: [Order] {
         guard let selectedCategoryId else { return recommendations }
-        return recommendations.filter { $0.categoryId == Int64(selectedCategoryId) }
+        return recommendations.filter { $0.categoryId == selectedCategoryId }
     }
 
     // Kategorien und Aufträge laden
@@ -159,7 +159,7 @@ class HomeViewModel: ObservableObject {
     }
 
     // Eigene User-ID laden, damit eigene Aufträge nicht empfohlen werden
-    private func currentAppUserId() async -> Int64? {
+    private func currentAppUserId() async -> Int? {
         do {
             let session = try await supabase.auth.session
             guard let email = session.user.email else { return nil }

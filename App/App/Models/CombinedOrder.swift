@@ -23,4 +23,5 @@ struct CombinedOrder: Identifiable {
     var accepterName: String = "Unbekannt"
     var chatPartnerId: Int = 0
     var chatPartnerName: String = ""
+    var isCompleted: Bool = false
 }

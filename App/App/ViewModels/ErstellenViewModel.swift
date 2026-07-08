@@ -56,7 +56,7 @@ class ErstellenViewModel: ObservableObject {
     }
     
     struct AppUser: Decodable {
-        let id: Int64
+        let id: Int
     }
 
     // Auftrag erstellen
