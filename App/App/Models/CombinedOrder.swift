@@ -8,8 +8,6 @@ import Foundation
 import Supabase
 import Combine
 
-
-
 struct CombinedOrder: Identifiable {
     let id: Int
     let orderId: Int
@@ -22,4 +20,7 @@ struct CombinedOrder: Identifiable {
     let date: Date
     let createdAt: String?
     var unreadCount: Int = 0
+    var accepterName: String = "Unbekannt"
+    var chatPartnerId: Int = 0
+    var chatPartnerName: String = ""
 }

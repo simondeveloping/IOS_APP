@@ -68,12 +68,12 @@ struct MeineAuftraegeView: View {
                 } else {
                     List(filteredOrders) { order in
                         Group {
-                            if order.accepterId != 0 {
+                            if let (partnerId, partnerName) = chatPartner(for: order) {
                                 NavigationLink(destination: ChatView(
                                     orderId: order.orderId,
                                     orderTitle: order.title,
-                                    otherUserId: order.createrId == userId ? order.accepterId : order.createrId,
-                                    otherUserName: viewModel.name(for: order.createrId == userId ? order.accepterId : order.createrId)
+                                    otherUserId: partnerId,
+                                    otherUserName: partnerName
                                 )) {
                                     orderRow(order: order)
                                 }
@@ -95,6 +95,24 @@ struct MeineAuftraegeView: View {
             guard userId > 0 else { return }
             await viewModel.loadOrders(for: userId)
         }
+    }
+
+    /// Ermittelt, ob und mit wem für diesen Auftrag gerade gechattet werden kann.
+    /// - Bereits angenommen: Chat mit der jeweils anderen Partei (Creator <-> Accepter).
+    /// - Von mir erstellt, noch nicht angenommen: Chat mit dem (einen) Interessenten,
+    ///   falls schon jemand geschrieben hat.
+    /// - Sonst: kein Chat möglich.
+    private func chatPartner(for order: CombinedOrder) -> (id: Int, name: String)? {
+        if order.accepterId != 0 {
+            let partnerId = order.createrId == userId ? order.accepterId : order.createrId
+            return (partnerId, viewModel.name(for: partnerId))
+        }
+
+        if order.createrId == userId, order.chatPartnerId != 0 {
+            return (order.chatPartnerId, order.chatPartnerName)
+        }
+
+        return nil
     }
 
     @ViewBuilder
@@ -124,9 +142,15 @@ struct MeineAuftraegeView: View {
 
                 HStack {
                     if order.createrId == userId, order.accepterId == 0 {
-                        Label("Erstellt", systemImage: "person.badge.plus")
-                            .font(.caption)
-                            .foregroundColor(.blue)
+                        if order.chatPartnerId != 0 {
+                            Label("Anfrage von \(order.chatPartnerName)", systemImage: "envelope")
+                                .font(.caption)
+                                .foregroundColor(.blue)
+                        } else {
+                            Label("Erstellt", systemImage: "person.badge.plus")
+                                .font(.caption)
+                                .foregroundColor(.blue)
+                        }
                     }
                     if order.accepterId != 0 {
                         if order.createrId == userId {

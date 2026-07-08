@@ -92,7 +92,47 @@ class MeineAuftraegeViewModel: ObservableObject {
 
             orders = combined.sorted { $0.date > $1.date }
 
-            let userIds = Set(combined.flatMap { [$0.createrId, $0.accepterId] }).filter { $0 != 0 }
+            // Für eigene, noch nicht angenommene Aufträge: den (einen) Chatpartner
+            // ermitteln, falls dort schon jemand angeschrieben hat.
+            let openOwnOrderIds = orders
+                .filter { $0.createrId == userId && $0.accepterId == 0 }
+                .map { $0.orderId }
+
+            var chatPartnerMap: [Int: Int] = [:]
+
+            if !openOwnOrderIds.isEmpty {
+                let messageResponse = try await supabase
+                    .from("Message")
+                    .select()
+                    .in("order_id", values: openOwnOrderIds)
+                    .eq("receiver_id", value: userId)
+                    .order("created_at", ascending: true)
+                    .execute()
+
+                let openOrderMessages: [Message] = try JSONDecoder().decode(
+                    [Message].self,
+                    from: messageResponse.data
+                )
+
+                // Ersten Absender pro Auftrag als Chatpartner nehmen (einfache Lösung,
+                // kein Support für mehrere gleichzeitige Interessenten pro Auftrag).
+                for message in openOrderMessages {
+                    if chatPartnerMap[message.order_id] == nil {
+                        chatPartnerMap[message.order_id] = message.sender_id
+                    }
+                }
+
+                for i in orders.indices {
+                    if let partnerId = chatPartnerMap[orders[i].orderId] {
+                        orders[i].chatPartnerId = partnerId
+                    }
+                }
+            }
+
+            var userIds = Set(combined.flatMap { [$0.createrId, $0.accepterId] })
+            userIds.formUnion(chatPartnerMap.values)
+            userIds = userIds.filter { $0 != 0 }
+
             for id in userIds {
                 do {
                     let userResponse = try await supabase
@@ -105,6 +145,12 @@ class MeineAuftraegeViewModel: ObservableObject {
                     accepterNames[id] = "\(user.Vorname) \(user.Nachname)"
                 } catch {
                     print("Konnte Benutzer \(id) nicht laden:", error)
+                }
+            }
+
+            for i in orders.indices {
+                if orders[i].chatPartnerId != 0 {
+                    orders[i].chatPartnerName = accepterNames[orders[i].chatPartnerId] ?? "Unbekannt"
                 }
             }
 
