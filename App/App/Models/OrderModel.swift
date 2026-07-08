@@ -18,16 +18,16 @@ struct AcceptedOrder: Codable, Identifiable {
 }
 
 struct Order: Decodable, Identifiable {
-    let id: Int64
+    let id: Int
     let title: String
     let description: String
     let price: Double?
-    let categoryId: Int64?
+    let categoryId: Int?
     let location: String
     let date: Date
     let isFlexibleTime: Bool
     let notes: String
-    let userId: Int64
+    let userId: Int
 
     enum CodingKeys: String, CodingKey {
         case id, title, description, price, location, date, notes
@@ -41,18 +41,18 @@ struct Order: Decodable, Identifiable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
-        id = try container.decode(Int64.self, forKey: .id)
+        id = try container.decode(Int.self, forKey: .id)
         title = try container.decode(String.self, forKey: .title)
         description = try container.decode(String.self, forKey: .description)
         price = try container.decodeIfPresent(Double.self, forKey: .price)
-        categoryId = try container.decodeIfPresent(Int64.self, forKey: .categoryId)
-            ?? container.decodeIfPresent(Int64.self, forKey: .categoryIdCamel)
+        categoryId = try container.decodeIfPresent(Int.self, forKey: .categoryId)
+            ?? container.decodeIfPresent(Int.self, forKey: .categoryIdCamel)
         location = try container.decode(String.self, forKey: .location)
         isFlexibleTime = try container.decodeIfPresent(Bool.self, forKey: .isFlexibleTime)
             ?? container.decodeIfPresent(Bool.self, forKey: .isFlexibleTimeCamel)
             ?? false
         notes = try container.decode(String.self, forKey: .notes)
-        userId = try container.decode(Int64.self, forKey: .userId)
+        userId = try container.decode(Int.self, forKey: .userId)
 
         let dateString = try container.decode(String.self, forKey: .date)
         guard let parsedDate = Self.parseDate(dateString) else {

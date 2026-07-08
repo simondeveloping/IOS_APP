@@ -34,9 +34,9 @@ struct OrderDetailView: View {
                 HStack {
                     NavigationLink {
                         ChatView(
-                            orderId: Int(order.id),
+                            orderId: order.id,
                             orderTitle: order.title,
-                            otherUserId: Int(order.userId),
+                            otherUserId: order.userId,
                             otherUserName: viewModel.sellerName
                         )
                     } label: {
@@ -106,7 +106,7 @@ struct OrderDetailView: View {
         .navigationTitle("Auftragsdetails")
         .navigationBarTitleDisplayMode(.inline)
         .task {
-            await viewModel.loadSellerName(for: Int(order.userId))
+            await viewModel.loadSellerName(for: order.userId)
         }
         .task {
             await viewModel.loadCurrentUserAndFavoriteStatus(for: order)

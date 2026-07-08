@@ -52,7 +52,7 @@ class OrderDetailViewModel: ObservableObject {
                 let payload = AcceptedOrderPayload(
                     orderId: order.id,
                     createrId: order.userId,
-                    accepterId: Int64(userId),
+                    accepterId: userId,
                     completionToken: token
                 )
 
@@ -79,13 +79,13 @@ class OrderDetailViewModel: ObservableObject {
                     .from("Favorites")
                     .select()
                     .eq("user_id", value: userId)
-                    .eq("order_id", value: Int(order.id))
+                    .eq("order_id", value: order.id)
                     .execute()
                     .value
 
                 if let existingFavorite = existing.first {
                     isFavorite = true
-                    currentFavoriteId = Int(existingFavorite.id)
+                    currentFavoriteId = existingFavorite.id
                 } else {
                     isFavorite = false
                     currentFavoriteId = nil
@@ -112,7 +112,7 @@ class OrderDetailViewModel: ObservableObject {
                     currentFavoriteId = nil
                 } else {
                     // Favorit hinzufügen
-                    let payload = FavoritePayload(userId: Int(Int64(userId)), orderId: Int(order.id))
+                    let payload = FavoritePayload(userId: userId, orderId: order.id)
 
                     let inserted: Favorite = try await supabase
                         .from("Favorites")
@@ -123,7 +123,7 @@ class OrderDetailViewModel: ObservableObject {
                         .value
 
                     isFavorite = true
-                    currentFavoriteId = Int(inserted.id)
+                    currentFavoriteId = inserted.id
                 }
             } catch {
                 print("Fehler beim Favorisieren:", error)

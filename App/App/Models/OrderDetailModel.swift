@@ -5,9 +5,9 @@
 //  Created by Merry on 26.06.26.
 //
 struct AcceptedOrderPayload: Encodable {
-    let orderId: Int64
-    let createrId: Int64
-    let accepterId: Int64
+    let orderId: Int
+    let createrId: Int
+    let accepterId: Int
     let completionToken: String
 
     enum CodingKeys: String, CodingKey {

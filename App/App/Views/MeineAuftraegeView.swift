@@ -16,6 +16,7 @@ struct MeineAuftraegeView: View {
         case alle = "Alle"
         case erstellt = "Erstellt"
         case angenommen = "Angenommen"
+        case abgeschlossen = "Abgeschlossen"
     }
 
     var filteredOrders: [CombinedOrder] {
@@ -25,7 +26,9 @@ struct MeineAuftraegeView: View {
         case .erstellt:
             return viewModel.orders.filter { $0.createrId == userId && $0.accepterId == 0 }
         case .angenommen:
-            return viewModel.orders.filter { $0.createrId == userId && $0.accepterId != 0 }
+            return viewModel.orders.filter { $0.createrId == userId && $0.accepterId != 0 && !$0.isCompleted }
+        case .abgeschlossen:
+            return viewModel.orders.filter { $0.createrId == userId && $0.accepterId != 0 && $0.isCompleted }
         }
     }
 

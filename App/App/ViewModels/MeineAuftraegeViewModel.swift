@@ -24,7 +24,7 @@ class MeineAuftraegeViewModel: ObservableObject {
             async let acceptedTask = supabase
                 .from("AcceptedOrder")
                 .select()
-                .or("creater_id.eq.\(userId),accepter_id.eq.\(userId)")
+                .eq("creater_id", value: userId)
                 .order("created_at", ascending: false)
                 .execute()
 
@@ -68,17 +68,18 @@ class MeineAuftraegeViewModel: ObservableObject {
                     price: order.price,
                     location: order.location,
                     date: order.date,
-                    createdAt: accepted.created_at
+                    createdAt: accepted.created_at,
+                    isCompleted: accepted.is_completed ?? false
                 )
             }
 
             let existingOrderIds = Set(combined.map { $0.orderId })
             for order in ownOrders {
-                guard !existingOrderIds.contains(Int(order.id)),
-                      !acceptedOrderIds.contains(Int(order.id)) else { continue }
+                guard !existingOrderIds.contains(order.id),
+                      !acceptedOrderIds.contains(order.id) else { continue }
                 combined.append(CombinedOrder(
-                    id: Int(order.id) * -1,
-                    orderId: Int(order.id),
+                    id: order.id * -1,
+                    orderId: order.id,
                     createrId: userId,
                     accepterId: 0,
                     title: order.title,

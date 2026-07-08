@@ -14,4 +14,14 @@ struct Rating: Identifiable, Decodable {
     let title: String
     let user_id: Int
     let fromUser_id: Int
+    let order_id: Int
+}
+
+struct RatingPayload: Encodable {
+    let description: String
+    let stars: Int
+    let title: String
+    let user_id: Int
+    let fromUser_id: Int
+    let order_id: Int
 }

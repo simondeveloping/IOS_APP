@@ -15,10 +15,10 @@ class EntdeckenViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var searchText = ""
-    @Published var sellerNames: [Int64: String] = [:]
-    @Published var sellerRatings: [Int64: Double] = [:]
+    @Published var sellerNames: [Int: String] = [:]
+    @Published var sellerRatings: [Int: Double] = [:]
 
-    private var currentUserId: Int64?
+    private var currentUserId: Int?
 
     var filteredOrders: [Order] {
         if searchText.isEmpty {
@@ -154,5 +154,5 @@ class EntdeckenViewModel: ObservableObject {
 }
 
 private struct HomeAppUser: Decodable {
-    let id: Int64
+    let id: Int
 }
