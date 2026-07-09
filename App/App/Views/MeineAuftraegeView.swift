@@ -11,6 +11,7 @@ struct MeineAuftraegeView: View {
     @StateObject private var viewModel = MeineAuftraegeViewModel()
     @AppStorage("userId") var userId: Int = 0
     @State private var selectedTab: AuftragTab = .alle
+    @State private var showScanner = false
 
     enum AuftragTab: String, CaseIterable {
         case alle = "Alle"
@@ -34,7 +35,8 @@ struct MeineAuftraegeView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            if viewModel.isLoading {
+            if viewModel.isLoading && viewModel.orders.isEmpty {
+                // Nur beim ersten Laden Spinner zeigen, nicht beim Refresh
                 Spacer()
                 ProgressView("Lade Aufträge...")
                 Spacer()
@@ -46,6 +48,10 @@ struct MeineAuftraegeView: View {
                         .foregroundColor(.orange)
                     Text(error)
                         .foregroundColor(.secondary)
+                    Button("Erneut versuchen") {
+                        Task { await viewModel.loadOrders(for: userId) }
+                    }
+                    .buttonStyle(.borderedProminent)
                 }
                 Spacer()
             } else {
@@ -86,8 +92,23 @@ struct MeineAuftraegeView: View {
                         }
                     }
                     .listStyle(.insetGrouped)
+                    .refreshable {
+                        await viewModel.loadOrders(for: userId)
+                    }
                 }
             }
+        }
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    showScanner = true
+                } label: {
+                    Image(systemName: "qrcode.viewfinder")
+                }
+            }
+        }
+        .sheet(isPresented: $showScanner) {
+            OrderScannerSheetView()
         }
         .navigationTitle("Meine Aufträge")
         .task {
@@ -100,11 +121,6 @@ struct MeineAuftraegeView: View {
         }
     }
 
-    /// Ermittelt, ob und mit wem für diesen Auftrag gerade gechattet werden kann.
-    /// - Bereits angenommen: Chat mit der jeweils anderen Partei (Creator <-> Accepter).
-    /// - Von mir erstellt, noch nicht angenommen: Chat mit dem (einen) Interessenten,
-    ///   falls schon jemand geschrieben hat.
-    /// - Sonst: kein Chat möglich.
     private func chatPartner(for order: CombinedOrder) -> (id: Int, name: String)? {
         if order.accepterId != 0 {
             let partnerId = order.createrId == userId ? order.accepterId : order.createrId
@@ -157,13 +173,19 @@ struct MeineAuftraegeView: View {
                     }
                     if order.accepterId != 0 {
                         if order.createrId == userId {
-                            Label("Angenommen von \(viewModel.name(for: order.accepterId))", systemImage: "hand.thumbsup")
-                                .font(.caption)
-                                .foregroundColor(.orange)
+                            Label(
+                                "Angenommen von \(viewModel.name(for: order.accepterId))",
+                                systemImage: "hand.thumbsup"
+                            )
+                            .font(.caption)
+                            .foregroundColor(.orange)
                         } else {
-                            Label("Erstellt von \(viewModel.name(for: order.createrId))", systemImage: "person")
-                                .font(.caption)
-                                .foregroundColor(.blue)
+                            Label(
+                                "Erstellt von \(viewModel.name(for: order.createrId))",
+                                systemImage: "person"
+                            )
+                            .font(.caption)
+                            .foregroundColor(.blue)
                         }
                     }
                 }
@@ -180,7 +202,6 @@ struct MeineAuftraegeView: View {
         }
         .padding(.vertical, 4)
     }
-
 }
 
 #Preview {

@@ -33,6 +33,10 @@ class HomeViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var userAvatarPath: String?
 
+    // Hält den aktuell laufenden Ladevorgang, damit sich .task und .refreshable
+    // nicht gegenseitig überschneiden und in CancellationErrors laufen.
+    private var currentLoadTask: Task<Void, Never>?
+
     // Empfehlungen nach ausgewählter Kategorie filtern
     var filteredRecommendations: [Order] {
         guard let selectedCategoryId else { return recommendations }
@@ -40,15 +44,47 @@ class HomeViewModel: ObservableObject {
     }
 
     // Kategorien und Aufträge laden
-    func loadHomeData(userId : Int) async {
+    // Bricht einen eventuell noch laufenden Ladevorgang zuerst ab,
+    // damit niemals zwei Ladevorgänge gleichzeitig laufen.
+    func loadHomeData(userId: Int) async {
+        currentLoadTask?.cancel()
+
+        let task = Task {
+            await performLoad(userId: userId)
+        }
+        currentLoadTask = task
+        await task.value
+    }
+
+    private func performLoad(userId: Int) async {
         isLoading = true
         errorMessage = nil
 
-        await loadCurrentUserAvatar()
-        await loadCategories()
-        await loadSellerNames()
-        await loadSellerRatings()
-        await loadRecommendations(userId : userId)
+        // Diese beiden sind unabhängig voneinander -> können parallel laufen
+        async let avatarTask: () = loadCurrentUserAvatar()
+        async let categoriesTask: () = loadCategories()
+
+        await avatarTask
+        await categoriesTask
+
+        guard !Task.isCancelled else {
+            isLoading = false
+            return
+        }
+
+        // WICHTIG: Empfehlungen MÜSSEN zuerst geladen werden,
+        // da loadSellerNames/loadSellerRatings von `recommendations` abhängen.
+        await loadRecommendations(userId: userId)
+
+        guard !Task.isCancelled else {
+            isLoading = false
+            return
+        }
+
+        async let namesTask: () = loadSellerNames()
+        async let ratingsTask: () = loadSellerRatings()
+        await namesTask
+        await ratingsTask
 
         isLoading = false
     }
@@ -66,16 +102,18 @@ class HomeViewModel: ObservableObject {
                 .order("title")
                 .execute()
                 .value
+        } catch is CancellationError {
+            // Ladevorgang wurde bewusst abgebrochen (z.B. neuer Refresh) -> kein Fehler anzeigen
         } catch {
             print("Fehler beim Laden der Kategorien:", error)
             errorMessage = "Kategorien konnten nicht geladen werden."
         }
     }
 
-    private func loadRecommendations(userId : Int) async {
+    private func loadRecommendations(userId: Int) async {
         do {
             let acceptedIds = (try? await OrderFilter.acceptedOrderIds()) ?? []
-            
+
             let allOrders: [Order] = try await supabase
                 .from("Order")
                 .select()
@@ -89,9 +127,13 @@ class HomeViewModel: ObservableObject {
                 .filter { $0.userId != userId && !acceptedIds.contains(Int($0.id)) }
                 .prefix(12)
                 .map { $0 }
+        } catch is CancellationError {
+            // Ladevorgang wurde bewusst abgebrochen (z.B. neuer Refresh) -> kein Fehler anzeigen
         } catch {
+            // Den echten Fehler mit ausgeben, damit man in der App sieht,
+            // woran es liegt (Decoding, Netzwerk, RLS-Policy, ...).
             print("Fehler beim Laden der Empfehlungen:", error)
-            errorMessage = "Empfehlungen konnten nicht geladen werden."
+            errorMessage = "Empfehlungen konnten nicht geladen werden: \(error.localizedDescription)"
         }
     }
 
@@ -107,6 +149,8 @@ class HomeViewModel: ObservableObject {
                     .execute()
                     .value
                 sellerNames[id] = "\(user.Vorname) \(user.Nachname)"
+            } catch is CancellationError {
+                // Ladevorgang wurde bewusst abgebrochen -> kein Fehler anzeigen
             } catch {
                 print("Fehler beim Laden des Verkäufernamens für \(id):", error)
                 sellerNames[id] = "Unbekannt"
@@ -128,6 +172,8 @@ class HomeViewModel: ObservableObject {
                     let total = ratings.reduce(0) { $0 + $1.stars }
                     sellerRatings[id] = Double(total) / Double(ratings.count)
                 }
+            } catch is CancellationError {
+                // Ladevorgang wurde bewusst abgebrochen -> kein Fehler anzeigen
             } catch {
                 print("Fehler beim Laden der Bewertungen für \(id):", error)
             }
@@ -153,6 +199,8 @@ class HomeViewModel: ObservableObject {
 
             userAvatarPath = result.Avatar
             UserDefaults.standard.set(result.Avatar, forKey: "userAvatar")
+        } catch is CancellationError {
+            // Ladevorgang wurde bewusst abgebrochen -> kein Fehler anzeigen
         } catch {
             print("Fehler beim Laden des Avatars:", error)
         }

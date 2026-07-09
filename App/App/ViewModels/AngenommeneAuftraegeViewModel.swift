@@ -1,3 +1,7 @@
+//
+//  AngenommeneAuftraegeViewModel.swift
+//  App
+//
 import Foundation
 import Supabase
 import Combine
@@ -11,6 +15,9 @@ class AngenommeneAuftraegeViewModel: ObservableObject {
     func loadOrders(for userId: Int) async {
         isLoading = true
         errorMessage = nil
+
+        defer { isLoading = false }
+
         do {
             let response = try await supabase
                 .from("AcceptedOrder")
@@ -53,8 +60,8 @@ class AngenommeneAuftraegeViewModel: ObservableObject {
                     location: order.location,
                     date: order.date,
                     createdAt: accepted.created_at,
-                    completionToken: accepted.completion_token,  // neu
-                    isCompleted: accepted.is_completed ?? false   // neu
+                    completionToken: accepted.completion_token,
+                    isCompleted: accepted.is_completed ?? false
                 )
             }
 
@@ -90,6 +97,5 @@ class AngenommeneAuftraegeViewModel: ObservableObject {
             print("Fehler beim Laden der angenommenen Aufträge:", error)
             errorMessage = "Aufträge konnten nicht geladen werden"
         }
-        isLoading = false
     }
 }

@@ -1,3 +1,7 @@
+//
+//  AngenommeneAuftraegeView.swift
+//  App
+//
 import SwiftUI
 
 struct AngenommeneAuftraegeView: View {
@@ -7,7 +11,8 @@ struct AngenommeneAuftraegeView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            if viewModel.isLoading {
+            if viewModel.isLoading && viewModel.orders.isEmpty {
+                // Nur beim ersten Laden Spinner zeigen, nicht beim Refresh
                 Spacer()
                 ProgressView("Lade Aufträge...")
                 Spacer()
@@ -20,6 +25,10 @@ struct AngenommeneAuftraegeView: View {
                         .foregroundColor(.orange)
                     Text(error)
                         .foregroundColor(.secondary)
+                    Button("Erneut versuchen") {
+                        Task { await viewModel.loadOrders(for: userId) }
+                    }
+                    .buttonStyle(.borderedProminent)
                 }
                 Spacer()
 
@@ -40,14 +49,13 @@ struct AngenommeneAuftraegeView: View {
                     orderRow(order)
                 }
                 .listStyle(.insetGrouped)
+                .refreshable {
+                    await viewModel.loadOrders(for: userId)
+                }
             }
         }
         .navigationTitle("Angenommene Aufträge")
         .task {
-            guard userId > 0 else { return }
-            await viewModel.loadOrders(for: userId)
-        }
-        .refreshable {
             guard userId > 0 else { return }
             await viewModel.loadOrders(for: userId)
         }

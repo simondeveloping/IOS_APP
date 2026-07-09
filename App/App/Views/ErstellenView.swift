@@ -30,21 +30,6 @@ struct ErstellenView: View {
             }
             .navigationTitle("Aufträge")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                // Scanner-Button nur anzeigen wenn Tab "Meine Aufträge" aktiv
-                if selectedTab == 0 {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button {
-                            showScanner = true
-                        } label: {
-                            Image(systemName: "qrcode.viewfinder")
-                        }
-                    }
-                }
-            }
-            .sheet(isPresented: $showScanner) {
-                OrderScannerSheetView()
-            }
         }
         .onChange(of: selectedTab) { _, newTab in
             if newTab == 0 {

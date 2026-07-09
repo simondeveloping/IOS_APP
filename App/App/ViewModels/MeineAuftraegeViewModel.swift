@@ -9,7 +9,6 @@ import Foundation
 import Supabase
 import Combine
 
-
 @MainActor
 class MeineAuftraegeViewModel: ObservableObject {
     @Published var orders: [CombinedOrder] = []
@@ -20,6 +19,9 @@ class MeineAuftraegeViewModel: ObservableObject {
     func loadOrders(for userId: Int) async {
         isLoading = true
         errorMessage = nil
+
+        defer { isLoading = false }
+
         do {
             async let acceptedTask = supabase
                 .from("AcceptedOrder")
@@ -37,11 +39,16 @@ class MeineAuftraegeViewModel: ObservableObject {
 
             let (response1, ownOrdersResponse) = try await (acceptedTask, ownOrdersTask)
 
-            let acceptedOrders: [AcceptedOrder] = try JSONDecoder().decode([AcceptedOrder].self, from: response1.data)
-            let ownOrders: [Order] = try JSONDecoder().decode([Order].self, from: ownOrdersResponse.data)
+            let acceptedOrders: [AcceptedOrder] = try JSONDecoder().decode(
+                [AcceptedOrder].self,
+                from: response1.data
+            )
+            let ownOrders: [Order] = try JSONDecoder().decode(
+                [Order].self,
+                from: ownOrdersResponse.data
+            )
 
             let acceptedOrderIds = Set(acceptedOrders.map { $0.order_id })
-
             let orderIds = acceptedOrders.map { $0.order_id }
             var orderMap: [Int: Order] = [:]
 
@@ -52,7 +59,10 @@ class MeineAuftraegeViewModel: ObservableObject {
                     .in("id", values: orderIds)
                     .execute()
 
-                let orderItems: [Order] = try JSONDecoder().decode([Order].self, from: response2.data)
+                let orderItems: [Order] = try JSONDecoder().decode(
+                    [Order].self,
+                    from: response2.data
+                )
                 orderMap = Dictionary(uniqueKeysWithValues: orderItems.map { (Int($0.id), $0) })
             }
 
@@ -93,8 +103,6 @@ class MeineAuftraegeViewModel: ObservableObject {
 
             orders = combined.sorted { $0.date > $1.date }
 
-            // Für eigene, noch nicht angenommene Aufträge: den (einen) Chatpartner
-            // ermitteln, falls dort schon jemand angeschrieben hat.
             let openOwnOrderIds = orders
                 .filter { $0.createrId == userId && $0.accepterId == 0 }
                 .map { $0.orderId }
@@ -115,8 +123,6 @@ class MeineAuftraegeViewModel: ObservableObject {
                     from: messageResponse.data
                 )
 
-                // Ersten Absender pro Auftrag als Chatpartner nehmen (einfache Lösung,
-                // kein Support für mehrere gleichzeitige Interessenten pro Auftrag).
                 for message in openOrderMessages {
                     if chatPartnerMap[message.order_id] == nil {
                         chatPartnerMap[message.order_id] = message.sender_id
@@ -142,7 +148,10 @@ class MeineAuftraegeViewModel: ObservableObject {
                         .eq("id", value: id)
                         .single()
                         .execute()
-                    let user: UserProfile = try JSONDecoder().decode(UserProfile.self, from: userResponse.data)
+                    let user: UserProfile = try JSONDecoder().decode(
+                        UserProfile.self,
+                        from: userResponse.data
+                    )
                     accepterNames[id] = "\(user.Vorname) \(user.Nachname)"
                 } catch {
                     print("Konnte Benutzer \(id) nicht laden:", error)
@@ -156,11 +165,13 @@ class MeineAuftraegeViewModel: ObservableObject {
             }
 
             await loadUnreadCounts(for: userId)
+
+        } catch is CancellationError {
+            print("Laden der Aufträge wurde abgebrochen")
         } catch {
             print("Fehler beim Laden der Aufträge:", error)
             errorMessage = "Aufträge konnten nicht geladen werden"
         }
-        isLoading = false
     }
 
     func name(for userId: Int) -> String {
@@ -175,7 +186,10 @@ class MeineAuftraegeViewModel: ObservableObject {
                 .eq("receiver_id", value: userId)
                 .execute()
 
-            let allMessages: [Message] = try JSONDecoder().decode([Message].self, from: response.data)
+            let allMessages: [Message] = try JSONDecoder().decode(
+                [Message].self,
+                from: response.data
+            )
             var counts: [Int: Int] = [:]
             for msg in allMessages {
                 counts[msg.order_id, default: 0] += 1
